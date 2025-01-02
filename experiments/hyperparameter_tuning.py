@@ -18,7 +18,7 @@ import torch.optim as optim
 
 def objective(trial):
     # Load dataset
-    dataset = DrugResponseDataset("data/GDSC2_processed.csv")
+    dataset = DrugResponseDataset("data/GDSC2_cleaned.csv")
     dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
     # Model parameters from trial
