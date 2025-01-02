@@ -1,0 +1,27 @@
+Experiment: DrugResponse Prediction
+Date: 2025-01-02
+
+Configuration:
+    embed_dim: 128
+    hidden_dim: 64
+    learning_rate: 0.001
+    batch_size: 32
+    epochs: 10
+
+Training Progress:
+    Epoch 1/10, Loss: 1.1553
+    Epoch 2/10, Loss: 0.7775
+    Epoch 3/10, Loss: 0.6689
+    Epoch 4/10, Loss: 0.6265
+    Epoch 5/10, Loss: 0.5722
+    Epoch 6/10, Loss: 0.5474
+    Epoch 7/10, Loss: 0.5314
+    Epoch 8/10, Loss: 0.5168
+    Epoch 9/10, Loss: 0.4813
+    Epoch 10/10, Loss: 0.4685
+
+Evaulation:
+    RMSE: 0.6731
+    R2: 0.9061
+
+Best model saved to: experiments/best_model.pt
