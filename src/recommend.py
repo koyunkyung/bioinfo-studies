@@ -3,7 +3,7 @@ from model import DrugResponseTransformer
 import pandas as pd
 
 # Load processed data and model
-processed_file = "data/GDSC2_processed.csv"
+processed_file = "data/GDSC2_cleaned.csv"
 model_path = "experiments/best_model.pt"
 
 # Load dataset

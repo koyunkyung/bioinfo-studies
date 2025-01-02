@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Load dataset and model
-dataset = DrugResponseDataset("data/GDSC2_processed.csv")
+dataset = DrugResponseDataset("data/GDSC2_cleaned.csv")
 dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
 
 num_cell_lines = dataset.cell_lines.max().item() + 1

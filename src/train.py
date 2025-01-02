@@ -41,7 +41,7 @@ class DrugResponseSMILES(Dataset):
             'target': self.targets[idx]
         }
 
-csv_file = "data/GDSC2_processed.csv"
+csv_file = "data/GDSC2_cleaned.csv"
 dataset = DrugResponseDataset(csv_file)
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
