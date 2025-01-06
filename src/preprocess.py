@@ -10,13 +10,17 @@ def preprocess(input_file, output_file):
     # Select relevant variables to use for the analysis
     columns_to_extract = ['cell_line_name', 'drug_name', 'putative_target', 'ln_ic50', 'auc', 'z_score']
     selected_data = data[columns_to_extract]
-    # Filter outliers and NA values
+
+    # Filter out only data that are resistant or sentitive to drugs
     filtered_data = selected_data[
-        (data['auc'] >= 0.2) & (data['auc'] <= 0.8) &
-        (data['z_score'] >= -2) & (data['z_score'] <= 2)
+        (data['z_score'] <= -2) | (data['z_score'] >= 2) &
+        (data['auc'] <= 0.35) | (data['auc'] >= 0.85)
     ]
-    filtered_data = filtered_data.drop(columns=['auc', 'z_score'])
+    # Drop out NA values
     filtered_data = filtered_data.dropna()
+
+    # Filter based on 'cell_line_name'
+
 
     # Encode categorical variables
     cell_line_encoder = LabelEncoder()
