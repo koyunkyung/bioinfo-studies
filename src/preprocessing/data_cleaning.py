@@ -1,5 +1,9 @@
+import os
+import json
+import requests
+from multiprocessing import Pool
 import pandas as pd
-from .fetch_smiles import fetch_smiles
+from preprocessing.fetch_smiles import fetch_smiles_parallel
 
 def clean_data(input_file, output_file):
     """
@@ -27,7 +31,7 @@ def clean_data(input_file, output_file):
 
     # Merge with annotations to add disease information
     merged_data = pd.merge(filtered_data, annotations, on='cell_line_name', how='left')
-    merged_data['smiles'] = merged_data['drug_name'].apply(fetch_smiles)
+    merged_data['smiles'] = merged_data['drug_name'].apply(fetch_smiles_parallel)
 
     # Group by 'disease' and aggregate
     grouped_data = merged_data.groupby('disease').agg({
@@ -41,3 +45,9 @@ def clean_data(input_file, output_file):
     # Save the cleaned dataset
     grouped_data.to_csv(output_file, index=False)
     print(f"Cleaned data saved to {output_file}")
+
+if __name__ == "__main__":
+    clean_data(
+        input_file="data/raw/GDSC2_raw.xlsx",
+        output_file="data/processed/GDSC2_cleaned.csv"
+    )
