@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 from preprocessing.fetch_smiles import fetch_smiles_with_cache
+from sklearn.preprocessing import StandardScaler
 
 def fetch_smiles_wrapper(drug_name, session):
     """
@@ -28,7 +29,8 @@ def clean_data(input_file, output_file):
     # Filter and drop unnecessary data
     filtered_data = selected_data[
         ((selected_data['z_score'] <= -2) | (selected_data['z_score'] >= 2)) &
-        ((selected_data['auc'] <= 0.35) | (selected_data['auc'] >= 0.85))
+        ((selected_data['auc'] <= 0.35) | (selected_data['auc'] >= 0.85)) &
+        (selected_data['ln_ic50'] > 0)
     ]
     filtered_data = filtered_data.drop(columns=['auc', 'z_score']).dropna()
 

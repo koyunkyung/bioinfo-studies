@@ -40,7 +40,7 @@ if __name__ == "__main__":
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     EPOCHS = 100
     BATCH_SIZE = 32
-    LEARNING_RATE = 0.001
+    LEARNING_RATE = 1e-4
     PATIENCE = 10  # Number of epochs to wait before stopping
 
     dataset = GDSCDataset(CSV_PATH)
@@ -52,16 +52,16 @@ if __name__ == "__main__":
         embedding_dim_drug=128,
         hidden_dim=256,
         output_dim=1,
-        drug_embedding_type="rdkit",  # Change to "scbert" if using SCBERT inputs
+        drug_embedding_type="scbert",  # Change to "scbert" if using SCBERT inputs
         rdkit_feature_dim=4  # RDKit features: MolWt, LogP, NumHDonors, NumHAcceptors
     ).to(DEVICE)
 
     # Define optimizer and loss function
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)
     criterion = nn.MSELoss()
 
     # Initialize Early Stopping
-    early_stopping = EarlyStopping(patience=PATIENCE, save_path="best_model.pth")
+    early_stopping = EarlyStopping(patience=PATIENCE, save_path="experiments/best_model.pth")
 
     # Training and evaluation loop
     for epoch in range(EPOCHS):
@@ -69,11 +69,11 @@ if __name__ == "__main__":
         train_loss = train_model(model, data_loader, optimizer, criterion, DEVICE)
 
         # Evaluate the model
-        val_loss, mse, r2 = evaluate_model(model, data_loader, criterion, DEVICE)
+        val_loss, rmse, r2 = evaluate_model(model, data_loader, criterion, DEVICE)
 
         print(f"Epoch {epoch+1}/{EPOCHS}")
         print(f"Train Loss: {train_loss:.4f}")
-        print(f"Validation Loss: {val_loss:.4f}, Validation MSE: {mse:.4f}, R2 Score: {r2:.4f}")
+        print(f"Validation Loss: {val_loss:.4f}, Validation RMSE: {rmse:.4f}, R2 Score: {r2:.4f}")
 
         # Early stopping check
         early_stopping(val_loss, model)
@@ -83,6 +83,4 @@ if __name__ == "__main__":
             break
 
     print("Training complete.")
-
-
 
