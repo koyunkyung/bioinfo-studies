@@ -10,7 +10,7 @@
 
 - **`data/`**
   - `processed/`: 필터링 후의 데이터셋과 임베딩 후의 데이터셋
-  - `raw/`: 원본 GDSC 데이터와 cell line-disease의 연결 정보를 담고 있는 annotations 데이터
+  - `raw/`: 원본 GDSC 데이터와 cell line-disease의 연결 정보를 담고 있는 annotations 데이터
 
 - **`experiments/`**
   - `best_model.pth`: 학습된 트랜스포머 모델
