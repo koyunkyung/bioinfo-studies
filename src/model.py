@@ -1,42 +1,74 @@
 import torch
 import torch.nn as nn
-from transformers import AutoTokenizer, AutoModel
+from torch.utils.data import Dataset
+from transformers import AutoModel
 
-class DrugResponseTransformer(nn.Module):
-    def __init__(self, num_cell_lines, num_drugs, embed_dim, hidden_dim, output_dim):
-        super(DrugResponseTransformer, self).__init__()
+### Unified Transformer Model ###
+class UnifiedTransformer(nn.Module):
+    def __init__(self, embedding_dim_cell, embedding_dim_drug, hidden_dim, output_dim, 
+                 drug_embedding_type, scbert_model_name="havens2/scBERT_SER", rdkit_feature_dim=4):
+        """
+        Unified Transformer Model to support different embedding types
+        - "label": LabelEncoder-based embeddings
+        - "scbert": scBERT-based embeddigns
+        - "rdkit": RDKit molecular feature embeddings
+        """
+        super(UnifiedTransformer, self).__init__()
 
-        # Embedding layers
-        self.cell_line_embedding = nn.Embedding(num_cell_lines, embed_dim)
-        self.drug_embedding = nn.Embedding(num_drugs, embed_dim)
+        # Cell line embedding (precomputed)
+        self.cell_line_fc = nn.Linear(embedding_dim_cell, hidden_dim)
 
-         # Transformer encoder
-        self.transformer = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model=embed_dim, nhead=4, batch_first=True),
-            num_layers=2
-         )
+        # Drug name embedding (flexible: scBERT or RDKit)
+        if drug_embedding_type == "scbert":
+            self.drug_embedding = SCBERTEmbedding(scbert_model_name)
+            self.drug_emb_dim = self.drug_embedding.hidden_dim
+        elif drug_embedding_type == "rdkit":
+            self.drug_embedding = RDKitEmbedding(rdkit_feature_dim, embedding_dim_drug)
+            self.drug_emb_dim = embedding_dim_drug
+        else:
+            raise ValueError(f"Unsupported drug embedding type: {drug_embedding_type}")
         
-        # Fully connected layers
-        self.fc = nn.Sequential(
-            nn.Linear(embed_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, output_dim)
+        # Transformer Encoder
+        self.transformer = nn.Transformer(
+            d_model=hidden_dim + self.drug_emb_dim,
+            nhead=8,
+            num_encoder_layers=4,
+            dim_feedforward=hidden_dim * 2
         )
 
-    def forward(self, cell_line, drug):
+        # Fully connected output layer
+        self.fc = nn.Linear(hidden_dim + self.drug_emb_dim, output_dim)
 
-        # Embedding lookup
-        cell_line_embed = self.cell_line_embedding(cell_line)
-        drug_embed = self.drug_embedding(drug)
+    def forward(self, cell_line_inputs, drug_inputs):
+        cell_line_emb = self.cell_line_fc(cell_line_inputs)                 # (batch_size, hidden_dim)
+        drug_emb = self.drug_embedding(drug_inputs)                         # shape depends on the embedding type
+        combined = torch.cat((cell_line_emb, drug_emb), dim=1).unsqueeze(1) # shape: (batch_size, 1, combined_dim)
+        transformer_out = self.transformer(combined, combined)
 
-        # Combine embeddings into a sequence
-        combined = torch.stack((cell_line_embed, drug_embed), dim=1)
-
-        # Transformer encoder processing
-        transformer_output = self.transformer(combined)     # shape: [batch_size, 2, embed_dim]
-        pooled_output = transformer_output.mean(dim=1)      # shape: [batch_size, embed_dim]
-
-        # Fully connected layers
-        output = self.fc(pooled_output)
+        output = self.fc(transformer_out[:, 0, :])
         return output
+
+
+
+
+### Drug Name Embedding: SCBERT ###
+class SCBERTEmbedding(nn.Module):
+    def __init__(self, model_name="havens2/scBERT_SER"):
+        super(SCBERTEmbedding, self).__init__()
+        self.scbert = AutoModel.from_pretrained(model_name)
+        self.hidden_dim = self.scbert.config.hidden_size
+
+    def forward(self, tokenized_inputs):
+        with torch.no_grad():
+            outputs = self.scbert(**tokenized_inputs)
+        return outputs.last_hidden_state[:, 0, :]
     
+
+### Drug Name Embedding: RDKit ###
+class RDKitEmbedding(nn.Module):
+    def __init__(self, input_dim, embedding_dim):
+        super(RDKitEmbedding, self).__init__()
+        self.fc = nn.Linear(input_dim, embedding_dim)
+
+    def forward(self, molecular_features):
+        return self.fc(molecular_features)

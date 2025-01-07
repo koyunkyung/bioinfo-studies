@@ -1,49 +1,37 @@
-from model import DrugResponseTransformer
 import torch
-from torch.utils.data import DataLoader
-from train import DrugResponseDataset
+import pandas as pd
 from sklearn.metrics import mean_squared_error, r2_score
-import matplotlib.pyplot as plt
-import numpy as np
 
-# Load dataset and model
-dataset = DrugResponseDataset("data/GDSC2_cleaned.csv")
-dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
+### Evaluation Function ###
+def evaluate_model(model, data_loader, criterion, device):
+    model.eval()
+    running_loss = 0.0
+    predictions = []
+    actuals = []
 
-num_cell_lines = dataset.cell_lines.max().item() + 1
-num_drugs = dataset.drugs.max().item() + 1
-model = DrugResponseTransformer(num_cell_lines, num_drugs, 128, 64, 1)
-model.load_state_dict(torch.load("experiments/best_model.pt"))
-model.eval()
+    with torch.no_grad():
+        for batch in data_loader:
+            cell_line_inputs = batch['cell_line_inputs'].to(device)
+            drug_inputs = batch['drug_inputs'].to(device)
+            targets = batch['target'].to(device)
 
-# Evaluate
-true_values, predictions = [], []
-with torch.no_grad():
-    for batch in dataloader:
-        cell_line = batch['cell_line']
-        drug = batch['drug']
-        target = batch['target']
-        output = model(cell_line, drug).squeeze()
-        predictions.extend(output.tolist())
-        true_values.extend(target.tolist())
+            # Forward pass
+            outputs = model(cell_line_inputs, drug_inputs).squeeze()
+            loss = criterion(outputs, targets)
 
-# Metrics
-rmse = mean_squared_error(true_values, predictions, squared=False)
-r2 = r2_score(true_values, predictions)
-print(f"RMSE: {rmse}, R2: {r2}")
+            running_loss += loss.item() * len(targets)
+            predictions.extend(outputs.cpu().numpy())
+            actuals.extend(targets.cpu().numpy())
 
-# Scatter plot
-plt.figure(figsize=(8, 8))
-plt.scatter(true_values, predictions, alpha=0.7, s=50)
+    # calculate metrics
+    epoch_loss = running_loss / len(data_loader.dataset)
+    mse = mean_squared_error(actuals, predictions)
+    r2 = r2_score(actuals, predictions)
 
-x = np.linspace(min(true_values), max(true_values), 100)
-plt.plot(x, x, '--', color='red', linewidth=2)
+    return epoch_loss, mse, r2
 
-plt.xlabel('True ln_ic50', fontsize=14)
-plt.ylabel('Predicted ln_ic50', fontsize=14)
-plt.title('True vs Predicted ln_ic50', fontsize=16)
-plt.legend(fontsize=12)
-plt.grid(alpha=0.3)
-
-plt.tight_layout()
-plt.show()
+### Metrics Function ###
+def calculate_metrics(predictions, actuals):
+    mse = mean_squared_error(actuals, predictions)
+    r2 = r2_score(actuals, predictions)
+    return mse, r2

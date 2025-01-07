@@ -1,5 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
+from sklearn.feature_extraction.text import CountVectorizer
+from gensim.models import KeyedVectors
 from transformers import AutoTokenizer, AutoModel
 from rdkit import Chem
 from rdkit.Chem import Descriptors
@@ -10,12 +12,43 @@ import numpy as np
 ### 1. LabelEncoder 기반 임베딩 ###
 def label_encoding(data, column_name):
     label_encoder = LabelEncoder()
-    data[f"{column_name}_label_encoded"] = label_encoder.fit_transform(data[column_name])
+    data[f"{column_name}_encoded"] = label_encoder.fit_transform(data[column_name])
     print(f"LabelEncoder embeddings added for column: {column_name}")
     return data
 
+# ### 2. Word Frequency 기반 임베딩 ###
+# def word_freq_embedding(data, column_name):
+#      vectorizer = CountVectorizer()
+#      freq_vectors = vectorizer.fit_transform(data[column_name]).toarray()
+#      feature_names = vectorizer.get_feature_names_out()
+#      print(f"Word Frequency embeddings generated for column: {column_name}. Shape: {freq_vectors.shape}")
 
-### 2. SCBERT 기반 임베딩 ###
+#      # add word frequency embeddings as columns
+#      freq_df = pd.DataFrame(freq_vectors, columns=[f"{column_name}_word_freq_{name}" for name in feature_names])
+#      data = pd.concat([data.reset_index(drop=True), freq_df], axis=1)
+
+#      return data
+
+# ### 3. Gene2Vec 기반 임베딩 ###
+# def gene2vec_embedding(data, column_name, model_path):
+#      print(f"Loading Gene2Vec model from {model_path}...")
+#      gene2vec_model = KeyedVectors.load_word2vec_format(model_path, binary=True)
+
+#      gene2vec_vectors = []
+#      for name in data[column_name]:
+#         if name in gene2vec_model:
+#                gene2vec_vectors.append(gene2vec_model[name])
+#         else:
+#              gene2vec_vectors.append(np.zeros(gene2vec_model.vector_size))
+
+#      gene2vec_df = pd.DataFrame(gene2vec_vectors, columns=[f"{column_name}_gene2vec_{i}" for i in range(gene2vec_model.vector_size)])
+#      data = pd.concat([data.reset_index(drop=True), gene2vec_df], axis=1)
+
+#      print(f"Gene2Vec embeddings added for column: {column_name}. Shape: {gene2vec_df.shape}")
+#      return data
+               
+
+### 4. SCBERT 기반 임베딩 ###
 def scbert_embedding(data, model_name="havens2/scBERT_SER"):
     # Create input sequences
     input_sequences = [
@@ -41,7 +74,7 @@ def scbert_embedding(data, model_name="havens2/scBERT_SER"):
     return data
 
 
-### 3. RDKit 분자 특성 기반 임베딩 ###
+### 5. RDKit 분자 특성 기반 임베딩 ###
 def rdkit_molecular(data, smiles_column):
     def compute_molecular(smiles):
         mol = Chem.MolFromSmiles(smiles)
@@ -79,3 +112,9 @@ def generate_all_embeddings(data, smiles_column="smiles"):
     data = rdkit_molecular(data, smiles_column)
 
     return data
+
+### 임베딩 데이터 저장 ###
+data = pd.read_csv("data/processed/GDSC2_cleaned.csv")
+data_with_embeddings = generate_all_embeddings(data, smiles_column="smiles")
+data_with_embeddings.to_csv("data/processed/GDSC2_embeddings.csv", index=False)
+print("All embeddings have been generated and saved to 'data/processed/GDSC2_embeddings.csv'.")
