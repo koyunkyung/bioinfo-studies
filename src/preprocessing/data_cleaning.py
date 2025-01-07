@@ -1,13 +1,16 @@
-import os
-import json
-import requests
-from multiprocessing import Pool
 import pandas as pd
-from preprocessing.fetch_smiles import fetch_smiles_parallel
+import requests
+from preprocessing.fetch_smiles import fetch_smiles_with_cache
+
+def fetch_smiles_wrapper(drug_name, session):
+    """
+    Wrapper function to use fetch_smiles_with_cache with pandas apply.
+    """
+    return fetch_smiles_with_cache(drug_name, session)
 
 def clean_data(input_file, output_file):
     """
-    Clean and preprocess the raw dataset.
+    Clean and preprocess the raw dataset. Add disease clustering information.
     """
     # Load main dataset
     data = pd.read_excel(input_file, sheet_name=0)
@@ -31,19 +34,17 @@ def clean_data(input_file, output_file):
 
     # Merge with annotations to add disease information
     merged_data = pd.merge(filtered_data, annotations, on='cell_line_name', how='left')
-    merged_data['smiles'] = merged_data['drug_name'].apply(fetch_smiles_parallel)
+    merged_data = merged_data.dropna(subset=['disease'])
 
-    # Group by 'disease' and aggregate
-    grouped_data = merged_data.groupby('disease').agg({
-        'cell_line_name': lambda x: ', '.join(x),  # Combine cell line names
-        'drug_name': lambda x: x.mode().iloc[0] if not x.mode().empty else 'Unknown',  # Get most frequent drug name
-        'putative_target': lambda x: x.mode().iloc[0] if not x.mode().empty else 'Unknown',  # Get most frequent target
-        'ln_ic50': 'mean',  # Calculate mean for ln_ic50
-        'smiles': lambda x: x.mode().iloc[0] if not x.mode().empty else 'Unknown'  # Get most frequent SMILES
-    }).reset_index()
+    # Fetch SMILES using session
+    with requests.Session() as session:
+        merged_data['smiles'] = merged_data['drug_name'].apply(lambda x: fetch_smiles_wrapper(x, session))
+
+    # Drop rows where SMILES is missing
+    merged_data = merged_data.dropna(subset=['smiles'])
 
     # Save the cleaned dataset
-    grouped_data.to_csv(output_file, index=False)
+    merged_data.to_csv(output_file, index=False)
     print(f"Cleaned data saved to {output_file}")
 
 if __name__ == "__main__":

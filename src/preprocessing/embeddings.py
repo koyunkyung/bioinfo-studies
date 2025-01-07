@@ -69,8 +69,8 @@ def rdkit_molecular(data, smiles_column):
 ### 통합 함수 ###
 def generate_all_embeddings(data, smiles_column="smiles"):
     # 1. LabelEncoder embeddings
+    data = label_encoding(data, "cell_line_name")
     data = label_encoding(data, "drug_name")
-    data = label_encoding(data, "disease")
 
     # 2. SCBERT embeddings
     data = scbert_embedding(data)
