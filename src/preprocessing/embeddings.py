@@ -7,6 +7,7 @@ from rdkit import Chem
 from rdkit.Chem import Descriptors
 import torch
 import numpy as np
+import os
 
 
 ### 1. LabelEncoder 기반 임베딩 ###
@@ -50,6 +51,10 @@ def label_encoding(data, column_name):
 
 ### 4. SCBERT 기반 임베딩 ###
 def scbert_embedding(data, model_name="havens2/scBERT_SER"):
+    # Disable parallelism warning
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+
     # Create input sequences
     input_sequences = [
         f"cell_line: {row['cell_line_name']} [SEP] drug_name: {row['drug_name']} [SEP] putative_target: {row['putative_target']} [SEP] SMILES: {row['smiles']} [SEP] disease: {row['disease']}"
@@ -58,7 +63,7 @@ def scbert_embedding(data, model_name="havens2/scBERT_SER"):
 
     # Tokenize and encode
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    encoded_inputs = tokenizer(input_sequences, padding=True, truncation=True, return_tensors="pt")
+    encoded_inputs = tokenizer(input_sequences, padding=True, truncation=True, max_length=512, return_tensors="pt")
 
     # Load SCBERT model
     model = AutoModel.from_pretrained(model_name)
@@ -93,14 +98,20 @@ def rdkit_molecular(data, smiles_column):
     feature_columns = ['MolWt', 'LogP', 'NumHDonors', 'NumHAcceptors']
     molecular_features_df = pd.DataFrame(molecular_features, columns=feature_columns)
 
-    # Concatenate with original DataFrame
+    # Ensure SMILES column is retained
     data = pd.concat([data.reset_index(drop=True), molecular_features_df], axis=1)
+    data[smiles_column] = data[smiles_column].reset_index(drop=True)
+    
     print("RDKit molecular features generated and added to the DataFrame.")
     return data
  
 
 ### 통합 함수 ###
 def generate_all_embeddings(data, smiles_column="smiles"):
+    # retain original smiles column
+    if smiles_column not in data.columns:
+         raise ValueError(f"'{smiles_column}' column not found in the dataset.")
+
     # 1. LabelEncoder embeddings
     data = label_encoding(data, "cell_line_name")
     data = label_encoding(data, "drug_name")
@@ -111,10 +122,15 @@ def generate_all_embeddings(data, smiles_column="smiles"):
     # 3. RDKit molecular features
     data = rdkit_molecular(data, smiles_column)
 
+    # ensure SMILES column is retained
+    if smiles_column not in data.columns:
+         data[smiles_column] = data[smiles_column].reset_index(drop=True)
+
     return data
 
 ### 임베딩 데이터 저장 ###
-data = pd.read_csv("data/processed/GDSC2_cleaned.csv")
-data_with_embeddings = generate_all_embeddings(data, smiles_column="smiles")
-data_with_embeddings.to_csv("data/processed/GDSC2_embeddings.csv", index=False)
-print("All embeddings have been generated and saved to 'data/processed/GDSC2_embeddings.csv'.")
+if __name__ == '__main__':
+    data = pd.read_csv("data/processed/GDSC2_cleaned.csv")
+    data_with_embeddings = generate_all_embeddings(data, smiles_column="smiles")
+    data_with_embeddings.to_csv("data/processed/GDSC2_embeddings.csv", index=False)
+    print("All embeddings have been generated and saved to 'data/processed/GDSC2_embeddings.csv'.")

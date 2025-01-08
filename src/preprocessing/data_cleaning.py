@@ -45,6 +45,13 @@ def clean_data(input_file, output_file):
     # Drop rows where SMILES is missing
     merged_data = merged_data.dropna(subset=['smiles'])
 
+    # Normalize features
+    scaler = StandardScaler()
+    merged_data[['MolWt', 'LogP', 'NumHDonors', 'NumHAcceptors']] = scaler.fit_transform(
+        merged_data[['MolWt', 'LogP', 'NumHDonors', 'NumHAcceptors']]
+    )
+    merged_data['ln_ic50'] = scaler.fit_transform(merged_data[['ln_ic50']])
+
     # Save the cleaned dataset
     merged_data.to_csv(output_file, index=False)
     print(f"Cleaned data saved to {output_file}")

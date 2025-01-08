@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
-from transformers import AutoModel
+from transformers import AutoModel, AutoTokenizer
 
 ### Unified Transformer Model ###
 class UnifiedTransformer(nn.Module):
@@ -33,7 +33,8 @@ class UnifiedTransformer(nn.Module):
             d_model=hidden_dim + self.drug_emb_dim,
             nhead=8,
             num_encoder_layers=4,
-            dim_feedforward=hidden_dim * 2
+            dim_feedforward=hidden_dim * 2,
+            batch_first=True
         )
 
         # Fully connected output layer
@@ -56,11 +57,20 @@ class SCBERTEmbedding(nn.Module):
     def __init__(self, model_name="havens2/scBERT_SER"):
         super(SCBERTEmbedding, self).__init__()
         self.scbert = AutoModel.from_pretrained(model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.hidden_dim = self.scbert.config.hidden_size
 
-    def forward(self, tokenized_inputs):
-        with torch.no_grad():
-            outputs = self.scbert(**tokenized_inputs)
+    def forward(self, smiles_list):
+        assert isinstance(smiles_list, list) and all(isinstance(s, str) for s in smiles_list), \
+            "smiles_list must be a list of strings (SMILES)."
+        tokenized_inputs = self.tokenizer(
+            smiles_list, padding=True, truncation=True, return_tensors="pt"
+        )
+
+        tokenized_inputs = {key: value.to(next(self.scbert.parameters()).device)
+                            for key, value in tokenized_inputs.items()}
+
+        outputs = self.scbert(**tokenized_inputs)
         return outputs.last_hidden_state[:, 0, :]
     
 

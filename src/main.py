@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -7,6 +8,8 @@ from evaluate import evaluate_model
 from model import UnifiedTransformer
 from train import GDSCDataset
 
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Early Stopping Class
 class EarlyStopping:
@@ -35,6 +38,7 @@ class EarlyStopping:
              self.early_stop = True
 
 
+
 if __name__ == "__main__":
     CSV_PATH = "data/processed/GDSC2_embeddings.csv"
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -44,7 +48,7 @@ if __name__ == "__main__":
     PATIENCE = 10  # Number of epochs to wait before stopping
 
     dataset = GDSCDataset(CSV_PATH)
-    data_loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+    data_loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
 
     # Initialize the model
     model = UnifiedTransformer(
@@ -56,31 +60,76 @@ if __name__ == "__main__":
         rdkit_feature_dim=4  # RDKit features: MolWt, LogP, NumHDonors, NumHAcceptors
     ).to(DEVICE)
 
-    # Define optimizer and loss function
-    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)
-    criterion = nn.MSELoss()
+    
+    # # Initialize Early Stopping
+    # early_stopping = EarlyStopping(patience=PATIENCE, save_path="experiments/best_model.pth")
 
-    # Initialize Early Stopping
-    early_stopping = EarlyStopping(patience=PATIENCE, save_path="experiments/best_model.pth")
+    # # Training and evaluation loop
+    # for epoch in range(EPOCHS):
+    #     # Train the model
+    #     train_loss = train_model(model, data_loader, optimizer, criterion, DEVICE)
 
-    # Training and evaluation loop
-    for epoch in range(EPOCHS):
-        # Train the model
-        train_loss = train_model(model, data_loader, optimizer, criterion, DEVICE)
+    #     # Evaluate the model
+    #     val_loss, rmse, r2 = evaluate_model(model, data_loader, criterion, DEVICE)
 
-        # Evaluate the model
-        val_loss, rmse, r2 = evaluate_model(model, data_loader, criterion, DEVICE)
+    #     print(f"Epoch {epoch+1}/{EPOCHS}")
+    #     print(f"Train Loss: {train_loss:.4f}")
+    #     print(f"Validation Loss: {val_loss:.4f}, Validation RMSE: {rmse:.4f}, R2 Score: {r2:.4f}")
 
-        print(f"Epoch {epoch+1}/{EPOCHS}")
-        print(f"Train Loss: {train_loss:.4f}")
-        print(f"Validation Loss: {val_loss:.4f}, Validation RMSE: {rmse:.4f}, R2 Score: {r2:.4f}")
+    #     # Early stopping check
+    #     early_stopping(val_loss, model)
+    #     if early_stopping.early_stop:
+    #         print("Early stopping triggered. Restoring best model.")
+    #         model.load_state_dict(torch.load("experiments/best_model.pth"))
+    #         break
 
-        # Early stopping check
-        early_stopping(val_loss, model)
-        if early_stopping.early_stop:
-            print("Early stopping triggered. Restoring best model.")
-            model.load_state_dict(torch.load("best_model.pth"))
-            break
+    # print("Training complete.")
 
-    print("Training complete.")
+    results = []
 
+    embedding_types = ["label", "scbert", "rdkit"]
+    for embedding_type in embedding_types:
+        print(f"Training with {embedding_type} embeddings...")
+
+        # Initialize model
+        model = UnifiedTransformer(
+            embedding_dim_cell=1,
+            embedding_dim_drug=128,
+            hidden_dim=256,
+            output_dim=1,
+            drug_embedding_type=embedding_type
+        ).to(DEVICE)
+
+        # Define optimizer and loss function
+        optimizer = optim.AdamW(model.parameters(), lr = LEARNING_RATE)
+        criterion = nn.MSELoss()
+
+        # Initialize Early Stopping
+        early_stopping = EarlyStopping(patience=PATIENCE, save_path=f"experiments/best_model_{embedding_type}.pth")
+
+
+        # Train model
+        best_rmse, best_r2 = None, None
+        for epoch in range(EPOCHS):
+                train_loss = train_model(model, data_loader, optimizer, criterion, DEVICE)
+                val_loss, rmse, r2 = evaluate_model(model, data_loader, criterion, DEVICE)
+                print(f"Epoch {epoch+1}/{EPOCHS} for {embedding_type}")
+                print(f"Train Loss: {train_loss:.4f}")
+                print(f"Validation Loss: {val_loss:.4f}, RMSE: {rmse:.4f}, R²: {r2:.4f}")
+
+                # Earnly stopping check
+                early_stopping(val_loss, model)
+                if early_stopping.early_stop:
+                    
+                    print(f"Early stopping")
+
+                if best_rmse is None or rmse < best_rmse:
+                    best_rmse, best_r2 = rmse, r2
+
+    # Store results
+    results.append({"Embedding": embedding_type, "Best RMSE": best_rmse, "Best R²": best_r2})
+
+    # Save results
+    results_df = pd.DataFrame(results)
+    results_df.to_csv("embedding_comparison_results.csv", index=False)
+    print(results_df)

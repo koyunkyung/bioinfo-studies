@@ -16,7 +16,7 @@ def evaluate_model(model, data_loader, criterion, device):
         for batch in data_loader:
             # Move data to device
             cell_line_inputs = batch['cell_line_inputs'].to(device)
-            drug_inputs = batch['drug_inputs'].to(device)
+            drug_inputs = batch['drug_inputs']
             targets = batch['target'].to(device)
 
             # Forward pass
