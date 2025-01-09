@@ -1,24 +1,36 @@
-Experiment: DrugResponse Prediction
-Date: 2025-01-02
+Experiment: DrugResponse Prediction with Various Embedding Methods
+Date: 2025-01-09
 
 Configuration:
     embed_dim: 128
     hidden_dim: 64
     learning_rate: 0.001
     batch_size: 32
-    epochs: 10
+    epochs: 100
 
 Training Progress:
-    Epoch 1/10, Loss: 1.1553
-    Epoch 2/10, Loss: 0.7775
-    Epoch 3/10, Loss: 0.6689
-    Epoch 4/10, Loss: 0.6265
-    Epoch 5/10, Loss: 0.5722
-    Epoch 6/10, Loss: 0.5474
-    Epoch 7/10, Loss: 0.5314
-    Epoch 8/10, Loss: 0.5168
-    Epoch 9/10, Loss: 0.4813
-    Epoch 10/10, Loss: 0.4685
+
+=== Training with one_hot drug embeddings ===
+    Epoch 1/100, Loss: 0.9649636737610164
+    Epoch 2/100, Loss: 0.41213671745438324
+    Epoch 3/100, Loss: 0.28893111587355014
+    Epoch 4/100, Loss: 0.20213629952386805
+    Epoch 5/100, Loss: 0.19736796205765322
+    Epoch 6/100, Loss: 0.15759904957131335
+    Epoch 7/100, Loss: 0.13042892947008736
+    Epoch 8/100, Loss: 0.11780640816217974
+    Epoch 9/100, Loss: 0.09653132389250554
+    Epoch 10/100, Loss: 0.09171344026138908
+    ...
+    Epoch 33/100, Loss: 0.04150719195604324
+    Epoch 34/100, Loss: 0.044495587874399986
+    Epoch 35/100, Loss: 0.05146659165620804
+    Epoch 36/100, Loss: 0.04178705767385269
+    Early stopping triggered after 36 epochs.
+
+=== Training with scbert drug embeddings ===
+
+
 
 Evaulation:
     RMSE: 0.6731
