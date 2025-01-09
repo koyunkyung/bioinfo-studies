@@ -11,31 +11,33 @@ Configuration:
 Training Progress:
 
 === Training with one_hot drug embeddings ===
-    Epoch 1/100, Loss: 0.9062527904385015
-    Epoch 2/100, Loss: 0.3816469099960829
-    Epoch 3/100, Loss: 0.2555777548175109
-    Epoch 4/100, Loss: 0.2010936080233047
-    Epoch 5/100, Loss: 0.18784671041526294
-    Epoch 6/100, Loss: 0.16517580359389908
-    Epoch 7/100, Loss: 0.1409149095416069
-    Epoch 8/100, Loss: 0.11972656806832865
-    Epoch 9/100, Loss: 0.10498498556645293
-    Epoch 10/100, Loss: 0.1059963016917831
+    Epoch 1/100, Loss: 0.8289230536473425
+    Epoch 2/100, Loss: 0.44143799927673844
+    Epoch 3/100, Loss: 0.2663529970143971
+    Epoch 4/100, Loss: 0.18910711278256617
+    Epoch 5/100, Loss: 0.161855463232649
+    Epoch 6/100, Loss: 0.14181775972247124
+    Epoch 7/100, Loss: 0.13448692554313885
+    Epoch 8/100, Loss: 0.11636165205977465
+    Epoch 9/100, Loss: 0.1095784418284893
+    Epoch 10/100, Loss: 0.08220385015010834
     ...
-    Epoch 52/100, Loss: 0.02979652122839501
-    Epoch 53/100, Loss: 0.025964504548985707
-    Epoch 54/100, Loss: 0.043894800431046044
-    Epoch 55/100, Loss: 0.04287233909493998
-    Epoch 56/100, Loss: 0.038418859856105166
-    Epoch 57/100, Loss: 0.0354050830937922
-    Epoch 58/100, Loss: 0.03271430159771913
-    Epoch 59/100, Loss: 0.02591639161600094
-    Early stopping triggered after 59 epochs.
+    Epoch 55/100, Loss: 0.022628090197318478
+    Epoch 56/100, Loss: 0.022596191859951143
+    Epoch 57/100, Loss: 0.02156175307831482
+    Epoch 58/100, Loss: 0.04047919496109611
+    Epoch 59/100, Loss: 0.04604055021742457
+    Epoch 60/100, Loss: 0.03655872540548444
+    Epoch 61/100, Loss: 0.03342594118102601
+    Early stopping triggered after 61 epochs.
 
 === Training with scbert drug embeddings ===
     Epoch 1/100, Loss: 1.5565584788196964
     Epoch 2/100, Loss: 1.001052605478387
     Epoch 3/100, Loss: 0.9013685599753731
+    Epoch 4/100, Loss: 0.7579800102271532
+    ...
+    
 
 
 Evaulation:
@@ -50,6 +52,6 @@ Evaulation:
     R² Score: -1.158753040037002    
 
 === Training with scbert drug embeddings ===
-    
+
 
 Best model saved to: experiments/best_model.pth

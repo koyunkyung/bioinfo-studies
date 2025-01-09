@@ -49,7 +49,7 @@ class DrugEmbedding:
         encoded = encoder.fit_transform(np.array(drug_names).reshape(-1, 1))
         return encoded
     
-    # 2. Pre-trained scBERT Embedding
+    # 2. Pre-trained scBERT Embedding: transformer model designed for single-cell gene expression data
     def scbert_embedding(self, smiles_list):
         """
         param smiles_list: List of SMILES strings.
@@ -67,7 +67,7 @@ class DrugEmbedding:
         embeddings = outputs.last_hidden_state.mean(dim=1)
         return embeddings
     
-    # 3. Pre-trained ChemBERTa Embedding
+    # 3. Pre-trained ChemBERTa Embedding: trained on SMILES strings that represent chemical molecules
     def chemberta_embedding(self, smiles_list):
         """
         param smiles_list: List of SMILES strings.
