@@ -164,4 +164,5 @@ if __name__ == "__main__":
         optimizer = optim.Adam(model.parameters(), lr=0.001)
 
         # Train model
+        save_path = f"models/{method}_model.pth"  # Dynamic save path
         train_model(model, dataloader, criterion, optimizer, num_epochs=100, device="cpu")

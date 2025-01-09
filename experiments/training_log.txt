@@ -47,7 +47,14 @@ Training Progress:
 
 
 Evaulation:
-    RMSE: 0.6731
-    R2: 0.9061
+=== Training with one_hot drug embeddings ===
+    Mean Squared Error (MSE): 2.059009552001953
+    R² Score: -1.0590096861031149
 
-Best model saved to: experiments/best_model.pt
+    Mean Squared Error (MSE): 1.1983319520950317
+    R² Score: -0.19833201491201669
+
+    Mean Squared Error (MSE): 2.158752918243408
+    R² Score: -1.158753040037002    
+
+Best model saved to: experiments/best_model.pth
