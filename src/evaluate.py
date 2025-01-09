@@ -2,7 +2,6 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import mean_squared_error, r2_score
-import numpy as np
 from train import DrugResponseDataset
 from model import DrugResponsePredictor
 
