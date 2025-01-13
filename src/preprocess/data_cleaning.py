@@ -27,7 +27,8 @@ def clean_data(input_file, output_file):
 
     filtered_data = selected_data[
         ((selected_data['z_score'] <= -2) | (selected_data['z_score'] >= 2)) &
-        ((selected_data['auc'] <= 0.35) | (selected_data['auc'] >= 0.85))
+        ((selected_data['auc'] <= 0.35) | (selected_data['auc'] >= 0.85)) &
+        (selected_data['ln_ic50'] > 0)
     ]
     filtered_data = filtered_data.drop(columns=['auc', 'z_score']).dropna()
 
@@ -51,7 +52,6 @@ def clean_data(input_file, output_file):
     # ic50 점수 (수치형 데이터) 정규화
     scaler = StandardScaler()
     merged_data['ln_ic50'] = scaler.fit_transform(merged_data[['ln_ic50']])
-    merged_data = merged_data(merged_data['ln_ic50'] > 0)
     merged_data = merged_data[['combined_cell_line', 'combined_drug', 'smiles', 'ln_ic50']]
 
     merged_data.to_csv(output_file, index=False)
