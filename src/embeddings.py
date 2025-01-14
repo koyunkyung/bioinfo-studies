@@ -11,13 +11,12 @@ import scanpy as sc
 
 ### Cell line name ###
 class CellLineEmbedding:
-    def __init__(self, drug_name, disease):
-        self.drug_name = drug_name
-        self.disease = disease
+    def __init__(self, cell_line_combined):
+        self.cell_line_combined = cell_line_combined
 
     # 1. scBERT (single cell BERT)
 
-    def scBERT(self, drug_combined):
+    def scBERT(self, cell_line_combined):
         
         tokenizer = BertTokenizer.from_pretrained('')
         model =  PerformerLM(
@@ -30,19 +29,19 @@ class CellLineEmbedding:
             g2v_position_emb = False
         )
 
-        inputs = tokenizer(drug_combined)
+        inputs = tokenizer(cell_line_combined)
         with torch.no_grad():
             outputs = model(**inputs)
 
         embeddings = 
 
     # 2. bioBERT
-    def bioBERT(self, drug_combined):
+    def bioBERT(self, cell_line_combined):
 
         tokenizer = AutoTokenizer.from_pretrained("dmis-lab/biobert-v1.1")
         model = AutoModel.from_pretrained("dmis-lab/biobert-v1.1")
 
-        inputs = tokenizer(drug_combined)
+        inputs = tokenizer(cell_line_combined)
         with torch.no_grad():
             outputs = model(**inputs)
         
@@ -50,6 +49,10 @@ class CellLineEmbedding:
 
 ### Drug name (분자구조 활용한 GNN 기법들 사용)###
 class DrugEmbedding:
+
+    def __init__(self, drug_combined):
+        self.drug_combined = drug_combined
+
     # 1. Fingerprint 분자구조 임베딩
     class Fingerprint:
 
@@ -75,3 +78,7 @@ class DrugEmbedding:
         # SAFE (Sequential Attachment-based Fragment Embedding)
         def safe():
             raise NotImplementedError
+        
+
+### 함수 작동 확인 테스트 케이스 ###
+if __name__ == "__main__":

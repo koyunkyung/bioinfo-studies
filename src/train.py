@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from embeddings import *
+from model import *
 
 ### load dataset ###
 
@@ -20,6 +21,12 @@ class DrugResponseData(Dataset):
         self.cell_line_embedding = CellLineEmbedding()
         self.cell_line_embedding = DrugEmbedding()
 
-        
+
+class 
 
 
+### 함수 작동 확인 테스트 케이스 ###
+if __name__ == "__main__":
+    model = Transformer()
+    criterion = 
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
