@@ -1,6 +1,10 @@
 import torch
 from sklearn.metrics import mean_squared_error, r2_score
 from embeddings import CellLineEmbedding, DrugEmbedding
+from model import DrugCellTransformer
+from train import *
+
+model = DrugCellTransformer
 
 model.eval()
 predictions = []

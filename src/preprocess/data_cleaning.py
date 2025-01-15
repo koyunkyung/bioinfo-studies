@@ -41,8 +41,8 @@ def clean_data(input_file, output_file):
 
     # SMILES 데이터 합치기
     with requests.Session() as session:
-        merged_data['smiles'] = merged_data['drug_name'].apply(lambda x: fetch_smiles_wrapper(x, session))
-    merged_data = merged_data.dropna(subset=['smiles'])
+        merged_data['drug_smiles'] = merged_data['drug_name'].apply(lambda x: fetch_smiles_wrapper(x, session))
+    merged_data = merged_data.dropna(subset=['drug_smiles'])
 
     # drug_name이랑 putative_target 열 하나로 만들기
     drug_cols = ['drug_name', 'putative_target']
@@ -52,7 +52,7 @@ def clean_data(input_file, output_file):
     # ic50 점수 (수치형 데이터) 정규화
     scaler = StandardScaler()
     merged_data['ln_ic50'] = scaler.fit_transform(merged_data[['ln_ic50']])
-    merged_data = merged_data[['combined_cell_line', 'combined_drug', 'smiles', 'ln_ic50']]
+    merged_data = merged_data[['combined_cell_line', 'combined_drug', 'drug_smiles', 'ln_ic50']]
 
     merged_data.to_csv(output_file, index=False)
     print(f"Cleaned data saved to {output_file}")

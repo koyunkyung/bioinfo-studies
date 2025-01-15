@@ -1,4 +1,4 @@
-combined_cell_line,combined_drug,smiles,ln_ic50
+combined_cell_line,combined_drug,drug_smiles,ln_ic50
 HH:cutaneous T cell lymphoma,Camptothecin:TOP1,CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O,-1.172988087789048
 ZR-75-30:breast_cancer,Camptothecin:TOP1,CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O,-0.9703453689210718
 AsPC-1:pancreatic_cancer,Camptothecin:TOP1,CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O,-0.9258844573502385

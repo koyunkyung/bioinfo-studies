@@ -3,17 +3,16 @@ from torch.utils.data import Dataset, DataLoader
 from embeddings import CellLineEmbedding, DrugEmbedding
 from model import DrugCellTransformer
 
+### 학습시킬 데이터 가져오기 ###
 class DrugResponseData(Dataset):
-    def __init__(self, combined_cell_name, combined_drug, labels, cell_embedding_method, drug_embedding_method):
+    def __init__(self, combined_cell_name, drug_smiles , labels, cell_embedding_method, drug_embedding_method):
         self.combined_cell_name = combined_cell_name
-        self.combined_drug = combined_drug
+        self.drug_smiles = drug_smiles
         self.labels = labels
 
-        # Embedding classes
         self.cell_embedding = CellLineEmbedding()
         self.drug_embedding = DrugEmbedding()
 
-        # Embedding methods
         self.cell_embedding_method = cell_embedding_method
         self.drug_embedding_method = drug_embedding_method
 
@@ -39,17 +38,16 @@ class DrugResponseData(Dataset):
 
         return {"cell": cell_features, "drug": drug_features, "label": label}
 
-# Dataset and DataLoader
 dataset = DrugResponseData(combined_cell_name, drug_smiles, labels)
 dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
-# Model, Loss, Optimizer
+### 모델, loss function, optimizer 정의 ###
 model = DrugCellTransformer(drug_vocab_size=2048, cell_feature_size=768, hidden_dim=256, output_dim=1)
 criterion = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-# Training Loop
-for epoch in range(10):
+### 모델 학습 ###
+for epoch in range(100):
     model.train()
     total_loss = 0
 
