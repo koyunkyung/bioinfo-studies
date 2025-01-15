@@ -72,7 +72,7 @@ class CellLineEmbedding:
 class DrugEmbedding:
 
     def __init__(self):
-        raise NotImplementedError
+        pass
 
     # 1. Fingerprint 분자구조 임베딩
     class Fingerprint:
@@ -80,11 +80,16 @@ class DrugEmbedding:
         # Morgan FP
         def morganFP(self, smiles_list, radius=2, n_bits=2048):
             fingerprints = []
+            generator = GetMorganGenerator(radius=radius, fpSize=n_bits)
             for smiles in smiles_list:
                 mol = Chem.MolFromSmiles(smiles)
-                fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius, nBits=n_bits)
-                fingerprints.append(np.array(fp))
-            return torch.tensor(fingerprints, dtype=torch.float32)
+                if mol is not None:
+                    fp = generator.GetFingerprint(mol)
+                    fingerprints.append(np.array(fp))
+                else:
+                    print(f"Invalid SMILES string: {smiles}")
+            fingerprints_array = np.array(fingerprints)
+            return torch.tensor(fingerprints_array, dtype=torch.float32)
             
         
         # ECFP (Extended Connectivity Fingerprints)
@@ -93,18 +98,18 @@ class DrugEmbedding:
         
     # 2. GNN (Graph Neural Network)
     def graph():
-        raise NotImplementedError
+        pass
 
     # 3. SMILES 파생 임베딩 기법: SELFIES, SAFE
     class fromSMILES():
 
         # SELFIES (Self-Referencing Embedded Strings)
         def selfies(self, smiles_list):
-            return encoder(smiles_list)
+            pass
         
         # SAFE (Sequential Attachment-based Fragment Embedding)
         def safe():
-            raise NotImplementedError
+            pass
         
 
 ### 함수 작동 확인 테스트 케이스 ###
@@ -114,6 +119,7 @@ if __name__ == "__main__":
 
     cell_embedding = CellLineEmbedding(scbert_model_path="data/pretrained_models/scbert_pretrained.pth")
     drug_embedding = DrugEmbedding()
+    fingerprint = drug_embedding.Fingerprint()
 
     # # scBERT embedding
     # scbert_embeddings = cell_embedding.scBERT(combined_cell_line)
@@ -125,10 +131,10 @@ if __name__ == "__main__":
     print(f"BioBERT Embeddings Shape: {biobert_embeddings.shape}")
 
     # Morgan fingerprint embedding
-    morgan_embeddings = drug_embedding.Fingerprint.morganFP(smiles_list)
+    morgan_embeddings = fingerprint.morganFP(smiles_list)
     print(f"Morgan Fingerprint Embeddings Shape: {morgan_embeddings.shape}")
 
     # ECFP embedding
-    ecfp_embeddings = drug_embedding.Fingerprint.ECFP(smiles_list)
+    ecfp_embeddings = fingerprint.ECFP(smiles_list)
     print(f"ECFP Embeddings Shape: {ecfp_embeddings.shape}")
 
