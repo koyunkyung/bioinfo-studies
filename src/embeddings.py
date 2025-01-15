@@ -130,7 +130,6 @@ class DrugEmbedding:
             return torch.tensor(selfies_array, dtype=torch.long)
 
         # SAFE (Sequential Attachment-based Fragment Embedding)
-
         def safe(self, smiles_list):
             # 유효성 검사 후에 safe로 변환
             safe_list = []
@@ -148,14 +147,16 @@ class DrugEmbedding:
             if not safe_list:
                 raise ValueError("No valid SAFE encodings generated from the provided SMILES")
 
-            tokenizer = AutoTokenizer.from_pretrained("datamol-io/safe-gpt")
-            model = AutoModel.from_pretrained("datamol-io/safe-gpt")
-            model.eval()
-            safe_tokens = tokenizer(safe_list, padding=True, truncation=True, return_tensors="pt")
-            with torch.no_grad():
-                outputs = model(**safe_tokens)
-            return outputs.pooler_output
-
+            # SAFE alphabet 생성하고 고유 ID 매핑
+            unique_fragments = set("".join(safe_list))
+            fragment_to_idx = {frag: idx for idx, frag in enumerate(sorted(unique_fragments))}
+            pad_to_len = max(len(safe_encoded) for safe_encoded in safe_list)
+            safe_encoded_list = [
+                [fragment_to_idx[frag] for frag in safe_encoded] + [0] * (pad_to_len - len(safe_encoded))
+                for safe_encoded in safe_list
+            ]
+            safe_array = np.array(safe_encoded_list, dtype=np.int32)
+            return torch.tensor(safe_array, dtype=torch.long)
 
 
 ### 함수 작동 확인 테스트 케이스 ###
@@ -186,6 +187,11 @@ if __name__ == "__main__":
     print(f"Morgan Fingerprint Embeddings Shape: {morgan_embeddings.shape}")
     print(f"Morgan Fingerprint Embeddings Tensor: \n{morgan_embeddings}")
 
+
+    # GNN model (Graph Neural Network)
+    # graph_embeddings = drug_embedding.neural_graph()
+    # print(f"GNN Embeddings Shape: {graph_embeddings.shape}")
+    # print(f"GNN Embeddings Tensor: \n{graph_embeddings}")
 
     # ECFP embedding
     ecfp_embeddings = fingerprint.ECFP(smiles_list)
