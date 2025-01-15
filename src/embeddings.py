@@ -9,11 +9,14 @@ import torch.nn as nn
 from transformers import AutoTokenizer, AutoModel, BertTokenizer
 from performer_pytorch import PerformerLM
 import scanpy as sc
-from selfies import encoder
+import selfies as sf
+import safe
 
 ### Cell line name ###
 class CellLineEmbedding:
     def __init__(self, scbert_model_path, num_bins=7, dim=200, depth=6, seq_len=16906, heads=10):
+        
+        # !!!'model.pth' 못 찾아내서 구현 실해한 상태 재시도 필요 !!!
         # # scBERT 관련 초기화
         # self.seq_len = seq_len
         # self.num_bins = num_bins
@@ -104,22 +107,53 @@ class DrugEmbedding:
     class fromSMILES():
 
         # SELFIES (Self-Referencing Embedded Strings)
+        # !!! SELFIES Embeddings Shape: torch.Size([2]) - 수정 필요함 !!!
         def selfies(self, smiles_list):
-            pass
-        
+            selfies_list = [sf.encoder(smiles) for smiles in smiles_list]
+            # robust alphabet 생성하고 고유 ID로 매핑
+            robust_alphabet = sf.get_semantic_robust_alphabet()
+            robust_alphabet.update(["[Pt]", "[nop]", "."]) 
+            alphabet = list(sorted(robust_alphabet))
+            symbol_to_idx = {s: i for i, s in enumerate(alphabet)}
+
+            pad_to_len = max(sf.len_selfies(s) for s in selfies_list)
+            selfies_encoded = [
+                sf.selfies_to_encoding(
+                    selfies=s,
+                    vocab_stoi=symbol_to_idx,
+                    pad_to_len=pad_to_len,
+                    enc_type="label",
+                )[0]
+                for s in selfies_list
+            ]
+            selfies_array = np.array(selfies_encoded, dtype=np.int32)
+            return torch.tensor(selfies_array, dtype=torch.long)
+
         # SAFE (Sequential Attachment-based Fragment Embedding)
-        def safe():
-            pass
-        
+
+        def safe(self, smiles_list):
+            safe_list = [safe.encode(smiles) for smiles in smiles_list]
+            tokenizer = AutoTokenizer.from_pretrained("datamol-io/safe-gpt")
+            model = AutoModel.from_pretrained("datamol-io/safe-gpt")
+            model.eval()
+            safe_tokens = tokenizer(safe_list, padding=True, truncation=True, return_tensors="pt")
+            with torch.no_grad():
+                outputs = model(**safe_tokens)
+            return outputs.pooler_output
+
+            
 
 ### 함수 작동 확인 테스트 케이스 ###
 if __name__ == "__main__":
+
     combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
     smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "N.N.Cl[Pt]Cl"]
 
     cell_embedding = CellLineEmbedding(scbert_model_path="data/pretrained_models/scbert_pretrained.pth")
+
     drug_embedding = DrugEmbedding()
     fingerprint = drug_embedding.Fingerprint()
+    fromsmiles = drug_embedding.fromSMILES()
 
     # # scBERT embedding
     # scbert_embeddings = cell_embedding.scBERT(combined_cell_line)
@@ -129,12 +163,29 @@ if __name__ == "__main__":
     # bioBERT embedding
     biobert_embeddings = cell_embedding.bioBERT(combined_cell_line)
     print(f"BioBERT Embeddings Shape: {biobert_embeddings.shape}")
+    print(f"BioBERT Embeddings Tensor: \n{biobert_embeddings}")
+
 
     # Morgan fingerprint embedding
     morgan_embeddings = fingerprint.morganFP(smiles_list)
     print(f"Morgan Fingerprint Embeddings Shape: {morgan_embeddings.shape}")
+    print(f"Morgan Fingerprint Embeddings Tensor: \n{morgan_embeddings}")
+
 
     # ECFP embedding
     ecfp_embeddings = fingerprint.ECFP(smiles_list)
     print(f"ECFP Embeddings Shape: {ecfp_embeddings.shape}")
+    print(f"ECFP Embeddings Tensor: \n{ecfp_embeddings}")
+
+    # SELFIES embedding
+    selfies_embeddings = fromsmiles.selfies(smiles_list)
+    print(f"SELFIES Embeddings Shape: {selfies_embeddings.shape}")
+    print(f"SELFIES Embeddings Tensor: {selfies_embeddings}")
+
+
+    # SAFE embedding
+    safe_embeddings = fromsmiles.safe(smiles_list)
+    print(f"SAFE Embeddings Shape: {safe_embeddings.shape}")
+    print(f"SAFE Embeddings Tensor: {safe_embeddings}")
+
 
