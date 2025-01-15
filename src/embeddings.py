@@ -13,9 +13,10 @@ from selfies import encoder
 
 ### Cell line name ###
 class CellLineEmbedding:
-    def __init__(self, scbert_model_path, num_tokens=7, dim=200, depth=6, seq_len=16906, heads=10):
+    def __init__(self, scbert_model_path="data/pretrained_models/scBERT-master/finetune.py", num_tokens=7, dim=200, depth=6, seq_len=16906, heads=10):
         # scBERT 관련 초기화
         self.seq_len = seq_len
+        self.scbert_tokenizer = BertTokenizer.from_pretrained("path_to_scbert_vocab")
         self.scbert_model = PerformerLM(
             num_tokens=num_tokens,
             dim=dim,
@@ -36,10 +37,12 @@ class CellLineEmbedding:
 
     # 1. scBERT (single cell BERT)
 
-    def scBERT(self, input_data):  
+    def scBERT(self, combined_cell_line):  
+        tokenized_input = self.scbert_tokenizer(combined_cell_line, padding=True, truncation=True, return_tensors="pt")
         with torch.no_grad():
-            outputs = self.scbert_model(input_data)
-        return outputs.
+            outputs = self.scbert_model(tokenized_input["input_ids"])
+        return outputs
+
 
     # 2. bioBERT
     def bioBERT(self, combined_cell_line):
