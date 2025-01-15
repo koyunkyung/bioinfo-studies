@@ -5,64 +5,72 @@ from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
 from rdkit.Chem import MolFromSmiles
+import torch.nn as nn
 from transformers import AutoTokenizer, AutoModel, BertTokenizer
 from performer_pytorch import PerformerLM
 import scanpy as sc
+from selfies import encoder
 
 ### Cell line name ###
 class CellLineEmbedding:
-    def __init__(self, cell_line_combined):
-        self.cell_line_combined = cell_line_combined
+    def __init__(self, scbert_model_path, num_tokens=7, dim=200, depth=6, seq_len=16906, heads=10):
+        # scBERT 관련 초기화
+        self.seq_len = seq_len
+        self.scbert_model = PerformerLM(
+            num_tokens=num_tokens,
+            dim=dim,
+            depth=depth,
+            max_seq_len=seq_len,
+            heads=heads,
+            local_attn_heads=0,
+            g2v_position_emb=True,
+        )
+        ckpt = torch.load(scbert_model_path)
+        self.scbert_model.load_state_dict(ckpt['model_state_dict'])
+        self.scbert_model.eval()
+
+        # bioBERT 관련 초기화
+        self.biobert_tokenizer = AutoTokenizer.from_pretrained("dmis-lab/biobert-v1.1")
+        self.biobert_model = AutoModel.from_pretrained("dmis-lab/biobert-v1.1")
+
 
     # 1. scBERT (single cell BERT)
 
-    def scBERT(self, cell_line_combined):
-        
-        tokenizer = BertTokenizer.from_pretrained('')
-        model =  PerformerLM(
-            num_tokens = CLASS,
-            dim = 200,
-            depth = 6,
-            max_seq_len = SEQ_LEN,
-            heads = 10,
-            local_attn_heads = 0,
-            g2v_position_emb = False
-        )
-
-        inputs = tokenizer(cell_line_combined)
+    def scBERT(self, input_data):  
         with torch.no_grad():
-            outputs = model(**inputs)
-
-        embeddings = 
+            outputs = self.scbert_model(input_data)
+        return outputs.
 
     # 2. bioBERT
-    def bioBERT(self, cell_line_combined):
-
-        tokenizer = AutoTokenizer.from_pretrained("dmis-lab/biobert-v1.1")
-        model = AutoModel.from_pretrained("dmis-lab/biobert-v1.1")
-
-        inputs = tokenizer(cell_line_combined)
+    def bioBERT(self, combined_cell_line):
+        inputs = self.biobert_tokenizer(combined_cell_line, padding=True, truncation=True, return_tensors="pt")
         with torch.no_grad():
-            outputs = model(**inputs)
-        
-        embeddings = 
+            outputs = self.biobert_model(**inputs)
+        return outputs.pooler_output
+
 
 ### Drug name (분자구조 활용한 GNN 기법들 사용)###
 class DrugEmbedding:
 
-    def __init__(self, drug_combined):
-        self.drug_combined = drug_combined
+    def __init__(self):
+        raise NotImplementedError
 
     # 1. Fingerprint 분자구조 임베딩
     class Fingerprint:
 
         # Morgan FP
-        def morganFP():
-            Chem.RDKFingerprint()
+        def morganFP(self, smiles_list, radius=2, n_bits=2048):
+            fingerprints = []
+            for smiles in smiles_list:
+                mol = Chem.MolFromSmiles(smiles)
+                fp = AllChem.GetMorganFingerprintAsBitVect(mol, radius, nBits=n_bits)
+                fingerprints.append(np.array(fp))
+            return torch.tensor(fingerprints, dtype=torch.float32)
+            
         
         # ECFP (Extended Connectivity Fingerprints)
-        def ECFP():
-            AllChem.GetMorganFingerprint()
+        def ECFP(self, smiles_list):
+            return self.morganFP(smiles_list, radius=2)
         
     # 2. GNN (Graph Neural Network)
     def graph():
@@ -72,8 +80,8 @@ class DrugEmbedding:
     class fromSMILES():
 
         # SELFIES (Self-Referencing Embedded Strings)
-        def selfies():
-            raise NotImplementedError
+        def selfies(self, smiles_list):
+            return encoder(smiles_list)
         
         # SAFE (Sequential Attachment-based Fragment Embedding)
         def safe():
@@ -82,3 +90,26 @@ class DrugEmbedding:
 
 ### 함수 작동 확인 테스트 케이스 ###
 if __name__ == "__main__":
+    combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
+    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "N.N.Cl[Pt]Cl"]
+
+    cell_embedding = CellLineEmbedding()
+    drug_embedding = DrugEmbedding()
+
+    # scBERT embedding
+    scbert_embeddings = cell_embedding.scBERT(combined_cell_line)
+    print(f"scBERT Embeddings Shape: {scbert_embeddings.shape}")
+
+
+    # bioBERT embedding
+    biobert_embeddings = cell_embedding.bioBERT(combined_cell_line)
+    print(f"BioBERT Embeddings Shape: {biobert_embeddings.shape}")
+
+    # Morgan fingerprint embedding
+    morgan_embeddings = drug_embedding.Fingerprint.morganFP(smiles_list)
+    print(f"Morgan Fingerprint Embeddings Shape: {morgan_embeddings.shape}")
+
+    # ECFP embedding
+    ecfp_embeddings = drug_embedding.Fingerprint.ECFP(smiles_list)
+    print(f"ECFP Embeddings Shape: {ecfp_embeddings.shape}")
+
