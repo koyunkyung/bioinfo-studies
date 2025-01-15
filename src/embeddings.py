@@ -4,8 +4,10 @@ import torch
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
-from rdkit.Chem import MolFromSmiles
-import torch.nn as nn
+from rdkit.Chem import MolFromSmiles, rdmolops
+from torch.nn import Module, Linear, ReLU
+from torch_geometric.nn import GATv2Conv, GCNConv, global_mean_pool
+from torch_geometric.data import Data, DataLoader
 from transformers import AutoTokenizer, AutoModel, BertTokenizer
 from performer_pytorch import PerformerLM
 import scanpy as sc
@@ -100,8 +102,67 @@ class DrugEmbedding:
             return self.morganFP(smiles_list, radius=2)
         
     # 2. GNN (Graph Neural Network)
-    def neural_graph():
-        pass
+    class GraphEmbedding:
+        # 약물 분자 구조 그래프 형태로 나타내기 (undirected graph)
+        class MoleculeGraphData:
+            def __init__(self, smiles_list):
+                self.smiles_list = smiles_list
+                self.graphs = [self.smiles_to_graph(smiles) for smiles in smiles_list]
+
+            def smiles_to_graph(self, smiles):
+                mol = Chem.MolFromSmiles(smiles)
+                if mol is None:
+                    raise ValueError(f"Invalid SMILES string: {smiles}")
+                # node features
+                atom_features = [atom.GetAtomicNum() for atom in mol.GetAtoms()]
+                # edges
+                edge_index = []
+                for bond in mol.GetBonds():
+                    i = bond.GetBeginAtomIdx()
+                    j = bond.GetEndAtomIdx()
+                    edge_index.append((i, j))
+                    edge_index.append((j, i))
+                edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
+                x = torch.tensor(atom_features, dtype=torch.float32).view(-1, 1)
+                return Data(x=x, edge_index=edge_index)
+            
+            def __len__(self):
+                return len(self.graphs)
+            
+            def __getitem__(self, idx):
+                return self.graphs[idx]
+            
+        class GATEncoder(Module):
+            def __init__(self, dim_in, dim_h, dim_out, heads=8):
+                super().__init__()
+                self.gat1 = GATv2Conv(dim_in, dim_h, heads=heads, concat=True)
+                self.gat2 = GATv2Conv(dim_h*heads, dim_h, heads=1)
+                self.fc = Linear(dim_h, dim_out)
+                self.relu = ReLU()
+
+            def forward(self, x, edge_index, batch):
+                x = self.relu(self.gat1(x, edge_index))
+                x = self.relu(self.gat2(x, edge_index))
+                x = global_mean_pool(x, batch)
+                return self.fc(x)
+            
+        def __init__(self, dim_in=1, dim_h=64, dim_out=32, heads=8):
+            self.model = self.GATEncoder(dim_in, dim_h, dim_out, heads)
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.model.to(self.device)
+
+        def embed(self, smiles_list, batch_size=32):
+            dataset = self.MoleculeGraphData(smiles_list)
+            data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+            embeddings = []
+            self.model.eval()
+            with torch.no_grad():
+                for batch in data_loader:
+                    batch = batch.to(self.device)
+                    embedding = self.model(batch.x, batch.edge_index, batch.batch)
+                    embeddings.append(embedding)
+            return torch.cat(embeddings, dim=0)                  
 
     # 3. SMILES 파생 임베딩 기법: SELFIES, SAFE
     class fromSMILES():
@@ -189,9 +250,10 @@ if __name__ == "__main__":
 
 
     # GNN model (Graph Neural Network)
-    # graph_embeddings = drug_embedding.neural_graph()
-    # print(f"GNN Embeddings Shape: {graph_embeddings.shape}")
-    # print(f"GNN Embeddings Tensor: \n{graph_embeddings}")
+    gat_embedding = drug_embedding.GraphEmbedding(dim_in=1, dim_h=128, dim_out=64, heads=8)
+    embeddings = gat_embedding.embed(smiles_list, batch_size=2)
+    print(f"GNN Embeddings Shape: {embeddings.shape}")
+    print(f"GNN Embeddings Tensor: \n{embeddings}")
 
     # ECFP embedding
     ecfp_embeddings = fingerprint.ECFP(smiles_list)
@@ -202,7 +264,6 @@ if __name__ == "__main__":
     selfies_embeddings = fromsmiles.selfies(smiles_list)
     print(f"SELFIES Embeddings Shape: {selfies_embeddings.shape}")
     print(f"SELFIES Embeddings Tensor: {selfies_embeddings}")
-
 
     # SAFE embedding
     safe_embeddings = fromsmiles.safe(smiles_list)
