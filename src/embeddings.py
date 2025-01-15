@@ -100,7 +100,7 @@ class DrugEmbedding:
             return self.morganFP(smiles_list, radius=2)
         
     # 2. GNN (Graph Neural Network)
-    def graph():
+    def neural_graph():
         pass
 
     # 3. SMILES 파생 임베딩 기법: SELFIES, SAFE
@@ -132,7 +132,22 @@ class DrugEmbedding:
         # SAFE (Sequential Attachment-based Fragment Embedding)
 
         def safe(self, smiles_list):
-            safe_list = [safe.encode(smiles) for smiles in smiles_list]
+            # 유효성 검사 후에 safe로 변환
+            safe_list = []
+            for smiles in smiles_list:
+                try:
+                    mol = Chem.MolFromSmiles(smiles)
+                    if mol is None:
+                        print(f"Invalid SMILES: {smiles}")
+                        continue
+                    safe_encoded = safe.encode(smiles)
+                    safe_list.append(safe_encoded)
+                except safe._exception.SAFEFragmentationError as e:
+                    print(f"SAFE encoding failed for SMILES: {smiles} with error: {e}")
+                    continue
+            if not safe_list:
+                raise ValueError("No valid SAFE encodings generated from the provided SMILES")
+
             tokenizer = AutoTokenizer.from_pretrained("datamol-io/safe-gpt")
             model = AutoModel.from_pretrained("datamol-io/safe-gpt")
             model.eval()
@@ -141,13 +156,13 @@ class DrugEmbedding:
                 outputs = model(**safe_tokens)
             return outputs.pooler_output
 
-            
+
 
 ### 함수 작동 확인 테스트 케이스 ###
 if __name__ == "__main__":
 
     combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
-    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "N.N.Cl[Pt]Cl"]
+    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "N.N.Cl[Pt]Cl", "CCC1(CC2CC(C3=C(CCN(C2)C1)C4=CC=CC=C4N3)(C5=C(C=C6C(=C5)C78CCN9C7C(C=CC9)(C(C(C8N6C)(C(=O)OC)O)OC(=O)C)CC)OC)C(=O)OC)O"]
 
     cell_embedding = CellLineEmbedding(scbert_model_path="data/pretrained_models/scbert_pretrained.pth")
 
