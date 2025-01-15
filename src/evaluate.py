@@ -11,6 +11,8 @@ predictions = []
 true_values = []
 
 with torch.no_grad():
+    dataset = DrugResponseData(combined_cell_name, drug_smiles, labels, cell_embedding_method, drug_embedding_method)
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
     for batch in dataloader:
         cell_features = batch['cell'].squeeze(1)
         drug_features = batch['drug'].squeeze(1)
