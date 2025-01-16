@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     # embedding methods 골라주기
     cell_embedding_method = "bioBERT"
-    drug_embedding_method = "ecfp"
+    drug_embedding_method = "morganFP"
 
     model = train_model(
         combined_cell_name,

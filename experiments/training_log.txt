@@ -18,7 +18,7 @@
     
 
 
-### cell line embedding: bioBERT, drug embedding: GAT embeddings ###
+### cell line embedding: bioBERT, drug embedding: GNN embeddings ###
 
 
 ### cell line embedding: bioBERT, drug embedding: SELFIES ###
