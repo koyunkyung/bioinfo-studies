@@ -248,17 +248,16 @@ if __name__ == "__main__":
     print(f"Morgan Fingerprint Embeddings Shape: {morgan_embeddings.shape}")
     print(f"Morgan Fingerprint Embeddings Tensor: \n{morgan_embeddings}")
 
+    # ECFP embedding
+    ecfp_embeddings = fingerprint.ECFP(smiles_list)
+    print(f"ECFP Embeddings Shape: {ecfp_embeddings.shape}")
+    print(f"ECFP Embeddings Tensor: \n{ecfp_embeddings}")
 
     # GNN model (Graph Neural Network)
     gat_embedding = drug_embedding.GraphEmbedding(dim_in=1, dim_h=128, dim_out=64, heads=8)
     embeddings = gat_embedding.embed(smiles_list, batch_size=2)
     print(f"GNN Embeddings Shape: {embeddings.shape}")
     print(f"GNN Embeddings Tensor: \n{embeddings}")
-
-    # ECFP embedding
-    ecfp_embeddings = fingerprint.ECFP(smiles_list)
-    print(f"ECFP Embeddings Shape: {ecfp_embeddings.shape}")
-    print(f"ECFP Embeddings Tensor: \n{ecfp_embeddings}")
 
     # SELFIES embedding
     selfies_embeddings = fromsmiles.selfies(smiles_list)

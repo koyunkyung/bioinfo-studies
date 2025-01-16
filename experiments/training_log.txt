@@ -1,0 +1,27 @@
+### cell line embedding: bioBERT, drug embedding: morganFP ###
+
+
+
+
+### cell line embedding: bioBERT, drug embedding: ECFP ###
+
+    Epoch 1, Loss: 0.962758249358127
+    Epoch 2, Loss: 0.8225368865226445
+    Epoch 3, Loss: 0.5915853898776205
+    Epoch 4, Loss: 0.4078317504180105
+    Epoch 5, Loss: 0.30433866577713115
+    Epoch 6, Loss: 0.27187010214516993
+    Epoch 7, Loss: 0.23496128520683238
+    Epoch 8, Loss: 0.22977360141904732
+    Epoch 9, Loss: 0.2089535719469974
+    ...
+    
+
+
+### cell line embedding: bioBERT, drug embedding: GAT embeddings ###
+
+
+### cell line embedding: bioBERT, drug embedding: SELFIES ###
+
+
+### cell line embedding: bioBERT, drug embedding: SAFE ###
