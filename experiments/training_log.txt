@@ -1,3 +1,5 @@
+(num_epochs=100, batch_size=32, lr=1e-4, patience=10)를 가지고 모델 학습 진행함
+
 ### cell line embedding: bioBERT, drug embedding: morganFP ###
 
 
@@ -15,10 +17,20 @@
     Epoch 8, Loss: 0.22977360141904732
     Epoch 9, Loss: 0.2089535719469974
     ...
-    
+    Epoch 92, Loss: 0.08117529347931084
+    Epoch 93, Loss: 0.07648492447639767
+    Epoch 94, Loss: 0.07503570116272099
+    Epoch 95, Loss: 0.07704144211387948
+    Epoch 96, Loss: 0.07643403558942832
+    Epoch 97, Loss: 0.07454689415661912
+    Epoch 98, Loss: 0.07397390299133565
+    Epoch 99, Loss: 0.0977239432303529
+    Epoch 100, Loss: 0.08105322096104685
 
 
 ### cell line embedding: bioBERT, drug embedding: GNN embeddings ###
+
+
 
 
 ### cell line embedding: bioBERT, drug embedding: SELFIES ###

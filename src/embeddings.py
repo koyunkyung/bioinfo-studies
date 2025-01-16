@@ -18,7 +18,7 @@ import safe
 class CellLineEmbedding:
     def __init__(self, scbert_model_path, num_bins=7, dim=200, depth=6, seq_len=16906, heads=10):
         
-        # !!!'model.pth' 못 찾아내서 구현 실해한 상태 재시도 필요 !!!
+        # !!!'model.pth' 못 찾아내서 구현 실패한 상태 재시도 필요 !!!
         # # scBERT 관련 초기화
         # self.seq_len = seq_len
         # self.num_bins = num_bins
@@ -66,6 +66,7 @@ class CellLineEmbedding:
         return outputs
 
     # 2. bioBERT
+
     def bioBERT(self, combined_cell_line):
         inputs = self.biobert_tokenizer(combined_cell_line, padding=True, truncation=True, return_tensors="pt")
         with torch.no_grad():
@@ -73,7 +74,7 @@ class CellLineEmbedding:
         return outputs.pooler_output
 
 
-### Drug name (분자구조 활용한 GNN 기법들 사용)###
+### Drug name (각각의 약물에 해당되는 SMILES 정보 이용) ###
 class DrugEmbedding:
 
     def __init__(self):
@@ -168,7 +169,6 @@ class DrugEmbedding:
     class fromSMILES():
 
         # SELFIES (Self-Referencing Embedded Strings)
-        # !!! SELFIES Embeddings Shape: torch.Size([2]) - 수정 필요함 !!!
         def selfies(self, smiles_list):
             selfies_list = [sf.encoder(smiles) for smiles in smiles_list]
             # robust alphabet 생성하고 고유 ID로 매핑
