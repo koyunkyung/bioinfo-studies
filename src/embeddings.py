@@ -115,7 +115,8 @@ class DrugEmbedding:
                 if mol is None:
                     raise ValueError(f"Invalid SMILES string: {smiles}")
                 # node features
-                atom_features = [atom.GetAtomicNum() for atom in mol.GetAtoms()]
+                atom_features = [[atom.GetAtomicNum(), atom.GetDegree()] for atom in mol.GetAtoms()]
+                x = torch.tensor(atom_features, dtype=torch.float32)
                 # edges
                 edge_index = []
                 for bond in mol.GetBonds():
@@ -147,7 +148,7 @@ class DrugEmbedding:
                 x = global_mean_pool(x, batch)
                 return self.fc(x)
             
-        def __init__(self, dim_in=1, dim_h=64, dim_out=32, heads=8):
+        def __init__(self, dim_in=2, dim_h=64, dim_out=32, heads=8):
             self.model = self.GATEncoder(dim_in, dim_h, dim_out, heads)
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             self.model.to(self.device)
