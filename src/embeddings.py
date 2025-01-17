@@ -104,6 +104,13 @@ class DrugEmbedding:
         
     # 2. GNN (Graph Neural Network)
     class GraphEmbedding:
+
+        def __init__(self, dim_in=2, dim_h=128, dim_out=64, heads=8):
+            self.model = self.GATEncoder(dim_in, dim_h, dim_out, heads)
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.model.to(self.device)
+
+
         # 약물 분자 구조 그래프 형태로 나타내기 (undirected graph)
         class MoleculeGraphData:
             def __init__(self, smiles_list):
@@ -133,7 +140,8 @@ class DrugEmbedding:
             
             def __getitem__(self, idx):
                 return self.graphs[idx]
-            
+
+        # Graph Attention Network 사용 (이웃 별 다른 가중치 부여)  
         class GATEncoder(Module):
             def __init__(self, dim_in, dim_h, dim_out, heads=8):
                 super().__init__()
@@ -153,6 +161,7 @@ class DrugEmbedding:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             self.model.to(self.device)
 
+        # 각 그래프 임베딩 계산
         def embed(self, smiles_list, batch_size=32):
             dataset = self.MoleculeGraphData(smiles_list)
             data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
@@ -225,7 +234,7 @@ class DrugEmbedding:
 if __name__ == "__main__":
 
     combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
-    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "N.N.Cl[Pt]Cl", "CCC1(CC2CC(C3=C(CCN(C2)C1)C4=CC=CC=C4N3)(C5=C(C=C6C(=C5)C78CCN9C7C(C=CC9)(C(C(C8N6C)(C(=O)OC)O)OC(=O)C)CC)OC)C(=O)OC)O"]
+    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "N.N.Cl[Pt]Cl", "CC1=C(C=C(C=N1)Cl)NCC2=CC=C(S2)C(=O)NC(CC3CCCC3)C(=O)NC4CC4"]
 
     cell_embedding = CellLineEmbedding(scbert_model_path="data/pretrained_models/scbert_pretrained.pth")
 

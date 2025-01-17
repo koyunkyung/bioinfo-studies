@@ -2,11 +2,23 @@ import torch
 from sklearn.metrics import mean_squared_error, r2_score
 from embeddings import CellLineEmbedding, DrugEmbedding
 from model import DrugCellTransformer
-from train import *
+from train import load_dataset, DrugResponseData
+from torch.utils.data import DataLoader
 
-model = DrugCellTransformer
+combined_cell_name, drug_smiles, labels = load_dataset("data/processed/GDSC2_cleaned.csv")
+cell_embedding_method = "bioBERT"
+drug_embedding_method = "selfies"
 
+model = DrugCellTransformer(
+    cell_embedding_dim=768,  
+    drug_embedding_dim=2048, 
+    hidden_dim=256, 
+    output_dim=1)
 model.eval()
+
+dataset = DrugResponseData(combined_cell_name, drug_smiles, labels, cell_embedding_method, drug_embedding_method)
+dataloader = DataLoader(dataset, batch_size=32, shuffle=False)
+
 predictions = []
 true_values = []
 
