@@ -154,11 +154,6 @@ class DrugEmbedding:
                 x = self.relu(self.gat2(x, edge_index))
                 x = global_mean_pool(x, batch)
                 return self.fc(x)
-            
-        def __init__(self, dim_in=2, dim_h=64, dim_out=32, heads=8):
-            self.model = self.GATEncoder(dim_in, dim_h, dim_out, heads)
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.model.to(self.device)
 
         # 각 그래프 임베딩 계산
         def embed(self, smiles_list, batch_size=32):

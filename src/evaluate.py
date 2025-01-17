@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 combined_cell_name, drug_smiles, labels = load_dataset("data/processed/GDSC2_cleaned.csv")
 cell_embedding_method = "bioBERT"
-drug_embedding_method = "selfies"
+drug_embedding_method = "ecfp"
 
 model = DrugCellTransformer(
     cell_embedding_dim=768,  
