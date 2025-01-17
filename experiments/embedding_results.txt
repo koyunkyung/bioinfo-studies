@@ -61,6 +61,8 @@ tensor([[ 0.0499,  0.1906, -0.2531,  0.6919,  0.2182, -0.3951,  0.1998,  0.1152,
 
 SELFIES Embeddings Shape: torch.Size([3])
 SELFIES Embeddings Tensor: tensor([50, 57, 50])
+
+
 SAFE encoding failed for SMILES: CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O with error: Slicing algorithms did not return any bonds that can be cut !
 SAFE encoding failed for SMILES: N.N.Cl[Pt]Cl with error: Slicing algorithms did not return any bonds that can be cut !
 SAFE Embeddings Shape: torch.Size([1, 89])
