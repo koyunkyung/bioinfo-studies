@@ -10,7 +10,7 @@ class DrugResponseData(Dataset):
         self.combined_cell_name = combined_cell_name
         self.drug_smiles = drug_smiles
         self.labels = labels
-        self.cell_embedding = CellLineEmbedding(scbert_model_path="data/pretrained_models/scbert_pretrained.pth")
+        self.cell_embedding = CellLineEmbedding(scbert_model_path="scbert_pretrained.pth")
         self.drug_embedding = DrugEmbedding()
         self.cell_embedding_method = cell_embedding_method
         self.drug_embedding_method = drug_embedding_method
@@ -67,8 +67,8 @@ def train_model(combined_cell_name, drug_smiles, labels, cell_embedding_method, 
         total_loss = 0
 
         for batch in dataloader:
-            cell_features = batch['cell'].squeeze(1)
-            drug_features = batch['drug'].squeeze(1)
+            cell_features = batch['cell'].squeeze(1).float()
+            drug_features = batch['drug'].squeeze(1).float()
             labels = batch['label'].float()
 
             outputs = model(drug_features, cell_features)
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     # embedding methods 골라주기
     cell_embedding_method = "bioBERT"
-    drug_embedding_method = "gnn"
+    drug_embedding_method = "selfies"
 
     model = train_model(
         combined_cell_name,
