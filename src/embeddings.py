@@ -18,22 +18,21 @@ import safe
 class CellLineEmbedding:
     def __init__(self, scbert_model_path, num_bins=7, dim=200, depth=6, seq_len=16906, heads=10):
         
-        # !!!'model.pth' 못 찾아내서 구현 실패한 상태 재시도 필요 !!!
-        # # scBERT 관련 초기화
-        # self.seq_len = seq_len
-        # self.num_bins = num_bins
-        # self.scbert_model = PerformerLM(
-        #     num_tokens=num_bins + 2, 
-        #     dim=dim,
-        #     depth=depth,
-        #     max_seq_len=seq_len + 1,
-        #     heads=heads,
-        #     local_attn_heads=0,
-        #     g2v_position_emb=True,
-        # )
-        # ckpt = torch.load(scbert_model_path)
-        # self.scbert_model.load_state_dict(ckpt["model_state_dict"])
-        # self.scbert_model.eval()
+        # scBERT 관련 초기화
+        self.seq_len = seq_len
+        self.num_bins = num_bins
+        self.scbert_model = PerformerLM(
+            num_tokens=num_bins + 2, 
+            dim=dim,
+            depth=depth,
+            max_seq_len=seq_len + 1,
+            heads=heads,
+            local_attn_heads=0,
+            g2v_position_emb=True,
+        )
+        ckpt = torch.load(scbert_model_path)
+        self.scbert_model.load_state_dict(ckpt["model_state_dict"])
+        self.scbert_model.eval()
 
 
         # bioBERT 관련 초기화
@@ -101,7 +100,8 @@ class DrugEmbedding:
         # ECFP (Extended Connectivity Fingerprints)
         def ECFP(self, smiles_list):
             return self.morganFP(smiles_list, radius=2)
-        
+
+
     # 2. GNN (Graph Neural Network)
     class GraphEmbedding:
 
@@ -109,7 +109,6 @@ class DrugEmbedding:
             self.model = self.GATEncoder(dim_in, dim_h, dim_out, heads)
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             self.model.to(self.device)
-
 
         # 약물 분자 구조 그래프 형태로 나타내기 (undirected graph)
         class MoleculeGraphData:
@@ -242,9 +241,9 @@ if __name__ == "__main__":
     fingerprint = drug_embedding.Fingerprint()
     fromsmiles = drug_embedding.fromSMILES()
 
-    # # scBERT embedding
-    # scbert_embeddings = cell_embedding.scBERT(combined_cell_line)
-    # print(f"scBERT Embeddings Shape: {scbert_embeddings.shape}")
+    # scBERT embedding
+    scbert_embeddings = cell_embedding.scBERT(combined_cell_line)
+    print(f"scBERT Embeddings Shape: {scbert_embeddings.shape}")
 
 
     # bioBERT embedding
