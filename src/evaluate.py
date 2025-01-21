@@ -1,6 +1,6 @@
 import torch
 from sklearn.metrics import mean_squared_error, r2_score
-from embeddings import CellLineEmbedding, DrugEmbedding
+from embeddings.embedding_1 import CellLineEmbedding, DrugEmbedding
 from model import DrugCellTransformer
 from train import load_dataset, DrugResponseData
 from torch.utils.data import DataLoader

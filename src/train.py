@@ -1,7 +1,7 @@
 import torch
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader
-from embeddings import CellLineEmbedding, DrugEmbedding
+from embeddings.embedding_1 import CellLineEmbedding, DrugEmbedding
 from model import DrugCellTransformer
 
 ### 학습시킬 데이터 가져오기 ###
