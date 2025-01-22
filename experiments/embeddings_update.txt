@@ -1,7 +1,7 @@
 Embedding functions test settings:
 
     combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
-    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "N.N.Cl[Pt]Cl", "CC1=C(C=C(C=N1)Cl)NCC2=CC=C(S2)C(=O)NC(CC3CCCC3)C(=O)NC4CC4"]
+    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "CN(C)CC=CC(=O)NC1=C(C=C2C(=C1)C(=NC=N2)NC3=CC(=C(C=C3)F)Cl)OC4CCOC4", "CNC(=O)C1=CC=CC=C1SC2=CC3=C(C=C2)C(=NN3)C=CC4=CC=CC=N4"]
 
 
 ### Cell Embedding ###
@@ -10,4 +10,7 @@ Embedding functions test settings:
 
 ### Drug Embedding ###
 
+Selfies-GPT Embeddings Shape: torch.Size([3])
+Selfies-GPT Embeddings Tensor: 
+tensor([50, 50, 50])
 

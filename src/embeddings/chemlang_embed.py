@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer, AutoModel
 from rdkit import Chem
 import safe
+import selfies as sf
 from selfies import encoder as selfies_encoder
 from selfies import get_alphabet_from_selfies, split_selfies
 import torch
@@ -52,37 +53,54 @@ class SafeEmbeddingGPT:
 # selfies 언어 모델을 활용한 임베딩
 class SelfiesEmbeddingGPT:
     def __init__(self):
-        self.alphabet = None
-        self.alphabet_dict = None
-    
-    def initialize_alphabet(self, smiles_list):
-        # selfies 패키지에서 제공하는 encoder를 사용해 smiles를 selfies로 변환
-        selfies_list = [selfies_encoder(smiles) for smiles in smiles_list]
-        self.alphabet = sorted(list(get_alphabet_from_selfies("".join(selfies_list))))
-        self.alphabet_dict = {symbol: idx for idx, symbol in enumerate(self.alphabet)}
+        # Robust alphabet 초기화
+        self.robust_alphabet = sf.get_semantic_robust_alphabet()
+        self.robust_alphabet.update(["[Pt]", "[nop]", "."])  # Custom symbols 추가
+        self.alphabet = list(sorted(self.robust_alphabet))
+        self.symbol_to_idx = {s: i for i, s in enumerate(self.alphabet)}
 
-    def selfies_onehot(self, selfies_str):
-        symbols = split_selfies(selfies_str)
-        one_hot = np.zeros((len(symbols), len(self.alphabet)), dtype=np.float32)
+    def validate_smiles(self, smiles):
+        mol = Chem.MolFromSmiles(smiles)
+        return mol is not None
 
-        for i, symbol in enumerate(symbols):
-            if symbol in self.alphabet_dict:
-                one_hot[i, self.alphabet_dict[symbol]] = 1.0
-            else:
-                raise ValueError(f"Symbol {symbol} not in alphabet.")
-        return one_hot
-    
+    def selfies(self, smiles_list):
+        # SMILES를 SELFIES로 변환
+        valid_smiles = [smiles for smiles in smiles_list if self.validate_smiles(smiles)]
+        selfies_list = []
+        for smiles in valid_smiles:
+            try:
+                selfies_str = sf.encoder(smiles)
+                selfies_list.append(selfies_str)
+            except Exception as e:
+                print(f"Error encoding SMILES '{smiles}': {e}")
+
+        if not selfies_list:
+            raise ValueError("No valid SELFIES strings generated.")
+
+        pad_to_len = max(sf.len_selfies(s) for s in selfies_list)
+
+        # SELFIES를 정수로 인코딩
+        selfies_encoded = [
+            sf.selfies_to_encoding(
+                selfies=s,
+                vocab_stoi=self.symbol_to_idx,
+                pad_to_len=pad_to_len,
+                enc_type="label",
+            )[0]
+            for s in selfies_list
+        ]
+        selfies_array = np.array(selfies_encoded, dtype=np.int32)
+        return torch.tensor(selfies_array, dtype=torch.long)
+
     def embed(self, smiles_list):
-        if self.alphabet is None:
-            self.initialize_alphabet(smiles_list)
+        try:
+            embeddings = self.selfies(smiles_list)
+            return embeddings
+        except ValueError as e:
+            print(f"Error generating embeddings: {e}")
+            return None
 
-        embeddings = []
-        for smiles in smiles_list:
-            selfies_str = selfies_encoder(smiles)
-            one_hot = self.selfies_onehot(selfies_str)
-            embeddings.append(one_hot)
 
-        return embeddings
 
 
 
@@ -91,8 +109,7 @@ class SelfiesEmbeddingGPT:
 if __name__ == "__main__":
 
     combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
-    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "N.N.Cl[Pt]Cl", "CC1=C(C=C(C=N1)Cl)NCC2=CC=C(S2)C(=O)NC(CC3CCCC3)C(=O)NC4CC4"]
-
+    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "CN(C)CC=CC(=O)NC1=C(C=C2C(=C1)C(=NC=N2)NC3=CC(=C(C=C3)F)Cl)OC4CCOC4", "CNC(=O)C1=CC=CC=C1SC2=CC3=C(C=C2)C(=NN3)C=CC4=CC=CC=N4"]
     ## scGPT를 사용한 cell line 임베딩 ##
 
 
