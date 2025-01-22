@@ -10,7 +10,19 @@ Embedding functions test settings:
 
 ### Drug Embedding ###
 
+## Chemical Language Embeddings
+
+
+
 Selfies-GPT Embeddings Shape: torch.Size([3])
 Selfies-GPT Embeddings Tensor: 
 tensor([50, 50, 50])
 
+ChemBERTa Embeddings Shape: torch.Size([3, 767])
+ChemBERTa Embeddings Tensor:
+tensor([[-2.4094, -2.9167, -3.4788,  ..., -1.1835, -1.4588, -2.9526],
+        [-1.6939, -1.7977, -2.9462,  ..., -1.0708, -1.4271, -4.0302],
+        [-1.8905, -2.1171, -3.0993,  ..., -1.0560, -1.6916, -3.9529]])
+
+
+## Graph Embedding (MPNN)

@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AutoModelForMaskedLM
 from rdkit import Chem
 import safe
 import selfies as sf
@@ -20,6 +20,9 @@ class ChemicalEmbeddings:
     
     def get_selfies_embeddings(self, smiles_list):
         return self.selfies_embedding.embed(smiles_list)
+    
+    def get_chemberta_embeddings(self, smiles_list):
+        return self.chemberta_embedding.embed(smiles_list)
     
 # safe 언어 모델을 활용한 임베딩
 class SafeEmbeddingGPT:
@@ -100,8 +103,19 @@ class SelfiesEmbeddingGPT:
             print(f"Error generating embeddings: {e}")
             return None
 
+# ChemBERTa를 이용한 약물 임베딩
+class ChemBertaEmbedding:
+    def __init__(self, model_name="seyonec/ChemBERTa-zinc-base-v1"):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForMaskedLM.from_pretrained(model_name)
 
-
+    def embed(self, smiles_list):
+        inputs = self.tokenizer(smiles_list, padding=True, truncation=True, return_tensors="pt")
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        logits = outputs.logits 
+        cls_embeddings = logits[:, 0, :] 
+        return cls_embeddings
 
 
 
@@ -121,30 +135,18 @@ if __name__ == "__main__":
     # print(f"SAFE-GPT Embeddings Tensor: \n{embeddings}")
 
 
-    ## selfies-GPT를 사용한 약물 임베딩 ##
-    selfies_gpt_embedding = SelfiesEmbeddingGPT()
-    embeddings = selfies_gpt_embedding.embed(smiles_list)
-    print(f"Selfies-GPT Embeddings Shape: {embeddings.shape}")
-    print(f"Selfies-GPT Embeddings Tensor: \n{embeddings}")
+    # ## selfies-GPT를 사용한 약물 임베딩 ##
+    # selfies_gpt_embedding = SelfiesEmbeddingGPT()
+    # embeddings = selfies_gpt_embedding.embed(smiles_list)
+    # print(f"Selfies-GPT Embeddings Shape: {embeddings.shape}")
+    # print(f"Selfies-GPT Embeddings Tensor: \n{embeddings}")
 
+    # ChemBERTa를 사용한 약물 임베딩
+    chemberta_embedding = ChemBertaEmbedding()
+    embeddings = chemberta_embedding.embed(smiles_list)
+    print(f"ChemBERTa Embeddings Shape: {embeddings.shape}")
+    print(f"ChemBERTa Embeddings Tensor:\n{embeddings}")
 
-
-
-    # ## MPNN을 사용한 약물 임베딩 ##
-    # atom_dim = 6
-    # bond_dim = 4 
-    # batch_size = 32
-    # message_units = 64
-    # message_steps = 4
-    # num_attention_heads = 8
-    # dense_units = 512
-
-    # mpnn_model = MPNNModel(atom_dim=atom_dim, bond_dim=bond_dim, batch_size=batch_size, message_units=message_units, message_steps=message_steps, num_attention_heads=num_attention_heads,dense_units=dense_units,)
-    # embeddings = mpnn_embeddings(smiles_list, mpnn_model, batch_size=batch_size)
-
-    # print(f"Generated Embeddings Shape: {embeddings.shape}")
-    # print(f"Generated Embeddings: \n{embeddings}")
-        
 
             
         
