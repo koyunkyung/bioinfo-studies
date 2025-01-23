@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoModel, AutoModelForMaskedLM
+from transformers import AutoTokenizer, AutoModel, AutoModelForMaskedLM, GPT2TokenizerFast
 from rdkit import Chem
 import safe
 import selfies as sf
@@ -6,14 +6,17 @@ from selfies import encoder as selfies_encoder
 from selfies import get_alphabet_from_selfies, split_selfies
 import torch
 import numpy as np
+from data.safe_gpt.tokenizer import *
+from data.safe_gpt.model import *
 
 ### Drug name (각각의 약물에 해당되는 SMILES 정보 이용) ###
 
 ## 화학정보 임베딩 방식 통합 클래스 ##
 class ChemicalEmbeddings:
-    def __init__(self, safe_model_name="datamol-io/safe-gpt"):
-        self.safe_embedding = SafeEmbeddingGPT(model_name=safe_model_name)
+    def __init__(self):
+        self.safe_embedding = SafeEmbeddingGPT()
         self.selfies_embedding = SelfiesEmbeddingGPT()
+        self.chemberta_embedding = ChemBertaEmbedding()
 
     def get_safe_embeddings(self, smiles_list):
         return self.safe_embedding.embed(smiles_list)
@@ -26,39 +29,61 @@ class ChemicalEmbeddings:
     
 # safe 언어 모델을 활용한 임베딩
 class SafeEmbeddingGPT:
-    def __init__(self, lm_model_name="datamol-io/safe-gpt"):
-        self.tokenizer = AutoTokenizer.from_pretrained(lm_model_name)
-        self.model = AutoModel.from_pretrained(lm_model_name)
+   def __init__(self):
+       try:
+           self.model = SAFEDoubleHeadsModel.from_pretrained("datamol-io/safe-gpt")
+           self.tokenizer = SAFESplitter()
+           self.vocab_size = self.model.config.vocab_size
+       except Exception as e:
+           print(f"Error initializing SafeEmbeddingGPT: {e}")
+           raise
 
-    def safe(self, smiles_list):
-        # 유효성 검사 후에 safe로 변환
-        safe_list = []
-        for smiles in smiles_list:
-            try:
-                mol = Chem.MolFromSmiles(smiles)
-                if mol is None:
-                    print(f"Invalid SMILES: {smiles}")
-                    continue
-                safe_encoded = safe.encode(smiles)
-                safe_list.append(safe_encoded)
-            except safe._exception.SAFEFragmentationError as e:
-                print(f"SAFE encoding failed for SMILES: {smiles} with error: {e}")
-                continue
-        if not safe_list:
-            raise ValueError("No valid SAFE encodings generated from the provided SMILES")
-        
-        # safe 문자열 언어 모델 입력으로 바꿔주고 임베딩 추출
-        inputs = self.tokenizer(safe_list, padding=True, truncation=True, return_tensors="pt")
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-        return outputs.last_hidden_state
-    
+   def embed(self, smiles_list):
+       # 유효성 검사 후에 safe로 변환 (safe 라이브러리 사용)
+       safe_list = []
+       for smiles in smiles_list:
+           try:
+               mol = Chem.MolFromSmiles(smiles)
+               if mol is None:
+                   print(f"Invalid SMILES: {smiles}")
+                   continue     
+               safe_encoded = safe.encode(smiles)
+               if safe_encoded:
+                   tokens = self.tokenizer.tokenize(safe_encoded)
+                   safe_list.append(tokens)
+           except Exception as e:
+               print(f"Encoding failed for SMILES: {smiles} with error: {e}")
+               continue
+               
+       if not safe_list:
+           raise ValueError("No valid SAFE encodings generated from the provided SMILES")
+
+       # 토큰을 모델 입력으로 변환 (해시 함수 이용해 모델의 어휘 크기에 맞는 정수 ID로 매핑)
+       input_tensors = []
+       for tokens in safe_list:
+           token_ids = []
+           for token in tokens:
+               token_id = hash(token) % (self.vocab_size - 1)
+               token_ids.append(token_id)
+           input_tensors.append(torch.tensor(token_ids))
+
+       # 가장 긴 sequence 기준으로 나머지에 padding 토큰 추가해서 길이 맞추기
+       max_len = max(len(t) for t in input_tensors)
+       padded_tensors = [torch.cat([t, torch.full((max_len - len(t),), self.vocab_size-1)]) for t in input_tensors]
+       input_ids = torch.stack(padded_tensors)
+
+        # 임베딩 추출
+       with torch.no_grad():
+           outputs = self.model(input_ids, output_hidden_states=True)
+       return outputs.hidden_states[-1]
+
+
 # selfies 언어 모델을 활용한 임베딩
 class SelfiesEmbeddingGPT:
     def __init__(self):
-        # Robust alphabet 초기화
+        # robust alphabet 초기화
         self.robust_alphabet = sf.get_semantic_robust_alphabet()
-        self.robust_alphabet.update(["[Pt]", "[nop]", "."])  # Custom symbols 추가
+        self.robust_alphabet.update(["[Pt]", "[nop]", "."])
         self.alphabet = list(sorted(self.robust_alphabet))
         self.symbol_to_idx = {s: i for i, s in enumerate(self.alphabet)}
 
@@ -121,29 +146,22 @@ class ChemBertaEmbedding:
 
 ### 함수 작동 확인 테스트 케이스 ###
 if __name__ == "__main__":
-
     combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
     smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "CN(C)CC=CC(=O)NC1=C(C=C2C(=C1)C(=NC=N2)NC3=CC(=C(C=C3)F)Cl)OC4CCOC4", "CNC(=O)C1=CC=CC=C1SC2=CC3=C(C=C2)C(=NN3)C=CC4=CC=CC=N4"]
 
-    # ## SAFE-GPT를 사용한 약물 임베딩 ##
-    # safe_gpt_embedding = SafeEmbeddingGPT(lm_model_name="datamol-io/safe-gpt")
-    # embeddings = safe_gpt_embedding.safe(smiles_list)
-    # print(f"SAFE-GPT Embeddings Shape: {embeddings.shape}")
-    # print(f"SAFE-GPT Embeddings Tensor: \n{embeddings}")
+    embedder = ChemicalEmbeddings()
+    
+    # SAFE-GPT 임베딩 테스트
+    safe_embeddings = embedder.get_safe_embeddings(smiles_list)
+    print(f"SAFE-GPT Embeddings Shape: {safe_embeddings.shape}")
+    print(f"SAFE-GPT Embeddings Tensor:\n{safe_embeddings}\n")
 
+    # SELFIES 임베딩 테스트
+    selfies_embeddings = embedder.get_selfies_embeddings(smiles_list)
+    print(f"Selfies-GPT Embeddings Shape: {selfies_embeddings.shape}")
+    print(f"Selfies-GPT Embeddings Tensor:\n{selfies_embeddings}\n")
 
-    # ## selfies-GPT를 사용한 약물 임베딩 ##
-    # selfies_gpt_embedding = SelfiesEmbeddingGPT()
-    # embeddings = selfies_gpt_embedding.embed(smiles_list)
-    # print(f"Selfies-GPT Embeddings Shape: {embeddings.shape}")
-    # print(f"Selfies-GPT Embeddings Tensor: \n{embeddings}")
-
-    # ChemBERTa를 사용한 약물 임베딩
-    chemberta_embedding = ChemBertaEmbedding()
-    embeddings = chemberta_embedding.embed(smiles_list)
-    print(f"ChemBERTa Embeddings Shape: {embeddings.shape}")
-    print(f"ChemBERTa Embeddings Tensor:\n{embeddings}")
-
-
-            
-        
+    # ChemBERTa 임베딩 테스트
+    chemberta_embeddings = embedder.get_chemberta_embeddings(smiles_list)
+    print(f"ChemBERTa Embeddings Shape: {chemberta_embeddings.shape}")
+    print(f"ChemBERTa Embeddings Tensor:\n{chemberta_embeddings}")
