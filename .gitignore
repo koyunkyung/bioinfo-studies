@@ -1,4 +1,5 @@
-./scGPT_human/best_model.pt
+scGPT/
+data/scGPT_human/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

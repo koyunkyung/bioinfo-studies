@@ -1,7 +1,7 @@
 import torch
 import json
 from transformers import GPT2Config, GPT2LMHeadModel
-from scGPT_human.gene_tokenizer import get_default_gene_vocab, tokenize_and_pad_batch
+from scGPT.scgpt.tokenizer.gene_tokenizer import get_default_gene_vocab, tokenize_and_pad_batch
 
 class scGPTEmbedding:
     def __init__(self, model_dir):
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
     smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "CN(C)CC=CC(=O)NC1=C(C=C2C(=C1)C(=NC=N2)NC3=CC(=C(C=C3)F)Cl)OC4CCOC4", "CNC(=O)C1=CC=CC=C1SC2=CC3=C(C=C2)C(=NN3)C=CC4=CC=CC=N4"]
-    model_dir = "scGPT_human"
+    model_dir = "data/scGPT_human"
 
     # scGPT를 사용한 cell line 임베딩
     scgpt = scGPTEmbedding(model_dir)

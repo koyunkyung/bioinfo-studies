@@ -2,6 +2,7 @@ import tensorflow as tf
 import keras
 from keras import layers, Model
 from graph_env import graph_from_smiles
+import numpy as np
 
 ## MPNN을 이용한 약물 임베딩 ##
 # message passing phase 구현 - 나의 노드, 이웃노들들의 현재 상태와 그것을 연결하는 엣지들의 정보 aggregate
@@ -157,22 +158,51 @@ def MPNNModel(
     )
     return model
 
+mpnn = MPNNModel(atom_dim=6, bond_dim=3)
+mpnn.compile(
+    loss=keras.losses.BinaryCrossentropy(),
+    optimizer=keras.optimizers.Adam(learning_rate=5e-4),
+    metrics=[keras.metrics.AUC(name="AUC")]
+)
+
 # 임베딩 만들기
 def mpnn_embeddings(smiles_list, model, batch_size=32):
-    atom_features, bond_features, pair_indices = graph_from_smiles(smiles_list)
-
+    atom_features, bond_features, pair_indices = graph_from_smiles(smiles_list)   
+    
     # 분자구조 받아올 리스트 만들기
     molecule_indicator = []
     for idx, atoms in enumerate(atom_features):
         molecule_indicator.extend([idx] * atoms.shape[0])
     molecule_indicator = tf.convert_to_tensor(molecule_indicator, dtype=tf.int32)
 
+    atom_features_tensor = tf.ragged.constant(atom_features).to_tensor(default_value=0.0)
+    bond_features_tensor = tf.ragged.constant(bond_features).to_tensor(default_value=0.0)
+    pair_indices_tensor = tf.ragged.constant(pair_indices).to_tensor(default_value=0)
+
+
     inputs = {
-        "atom_features": atom_features.to_tensor(),
-        "bond_features": bond_features.to_tensor(),
-        "pair_indices": pair_indices.to_tensor(),
-        "molecule_indicator": molecule_indicator,
+        "atom_features" : atom_features_tensor,
+        "bond_features" : bond_features_tensor,
+        "pair_indices" : pair_indices_tensor,
+        "molecule_indicator" : molecule_indicator
     }
 
-    embeddings = model.predict(inputs, batch_size=batch_size)
+    inputs_formatted = [inputs[atom_features], 
+        inputs[bond_features], 
+        inputs[pair_indices],
+        inputs[molecule_indicator]]
+    
+    embeddings = model.predict(inputs_formatted, batch_size=32)
     return embeddings
+
+    
+
+if __name__ == "__main__":
+
+    combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
+    smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "CN(C)CC=CC(=O)NC1=C(C=C2C(=C1)C(=NC=N2)NC3=CC(=C(C=C3)F)Cl)OC4CCOC4", "CNC(=O)C1=CC=CC=C1SC2=CC3=C(C=C2)C(=NN3)C=CC4=CC=CC=N4"]
+
+    # MPNN를 사용한 drug 임베딩
+    drug_embeddings = mpnn_embeddings(smiles_list, model=mpnn)
+    print(f"MPNN Drug Embeddings Shape: {drug_embeddings.shape}")
+    print(f"MPNN Drug Embeddings Tensor:\n{drug_embeddings}")
