@@ -6,6 +6,13 @@ Embedding functions test settings:
 
 ### Cell Embedding ###
 
+## scGPT Embeddings
+
+scGPT Embeddings Shape: torch.Size([3, 512])
+scGPT Embeddings Tensor:
+tensor([[ 0.1227,  0.2728, -1.3876,  ...,  0.2009,  0.2437,  0.3420],
+        [-0.0158,  0.3075, -1.3990,  ...,  0.1098,  0.2143,  0.3773],
+        [-0.0158,  0.3075, -1.3990,  ...,  0.1098,  0.2143,  0.3773]])
 
 
 ### Drug Embedding ###
