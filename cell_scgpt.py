@@ -43,7 +43,7 @@ class scGPTEmbedder:
             return cell.strip(), target.strip()
         return cell_line.strip(), ""
     
-    # 긱 cell line을 토큰 ID로 변환하기
+    # 각 cell line을 토큰 ID로 변환하기
     def tensor_input(self, cell_lines):
         processed = [self.process_cell_line(cl) for cl in cell_lines]
        
@@ -62,6 +62,7 @@ class scGPTEmbedder:
             "values": values_tensor,
             "attention_mask": attention_mask
         }
+    
     def get_embeddings(self, cell_lines):
         inputs = self.tensor_input(cell_lines)
         with torch.no_grad():

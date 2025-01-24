@@ -1,11 +1,8 @@
 Embedding functions test settings:
-
     combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
     smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "CN(C)CC=CC(=O)NC1=C(C=C2C(=C1)C(=NC=N2)NC3=CC(=C(C=C3)F)Cl)OC4CCOC4", "CNC(=O)C1=CC=CC=C1SC2=CC3=C(C=C2)C(=NN3)C=CC4=CC=CC=N4"]
 
-
 ### Cell Embedding ###
-
 ## scGPT Embeddings
 
 scGPT Embeddings Shape: torch.Size([3, 512])
@@ -14,9 +11,7 @@ tensor([[ 0.1227,  0.2728, -1.3876,  ...,  0.2009,  0.2437,  0.3420],
         [-0.0158,  0.3075, -1.3990,  ...,  0.1098,  0.2143,  0.3773],
         [-0.0158,  0.3075, -1.3990,  ...,  0.1098,  0.2143,  0.3773]])
 
-
 ### Drug Embedding ###
-
 ## Chemical Language Embeddings
 
 Encoding failed for SMILES: CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O with error: Slicing algorithms did not return any bonds that can be cut !
@@ -38,13 +33,9 @@ tensor([[[ 0.1106,  0.0289, -0.0330,  ...,  0.0725, -0.0498,  0.0093],
          [-0.0826,  0.0016,  0.1781,  ...,  0.0017, -0.0100,  0.0751],
          [-0.1018,  0.0016,  0.1736,  ..., -0.0149, -0.0289,  0.0754]]])
 
------------------------------------------------------------------------------------
-
 Selfies-GPT Embeddings Shape: torch.Size([3])
 Selfies-GPT Embeddings Tensor: 
 tensor([50, 50, 50])
-
------------------------------------------------------------------------------------
 
 ChemBERTa Embeddings Shape: torch.Size([3, 767])
 ChemBERTa Embeddings Tensor:
@@ -52,12 +43,9 @@ tensor([[-2.4094, -2.9167, -3.4788,  ..., -1.1835, -1.4588, -2.9526],
         [-1.6939, -1.7977, -2.9462,  ..., -1.0708, -1.4271, -4.0302],
         [-1.8905, -2.1171, -3.0993,  ..., -1.0560, -1.6916, -3.9529]])
 
------------------------------------------------------------------------------------
-
 ## Graph Embedding (MPNN)
 
 MPNN Embeddings Shape:  (3, 64)
-
 MPNN Embeddings:
 Molecule 1 Embedding: [-0.14517993  0.02835683 -0.05101459  0.15543582  0.1617906   0.00374156
  -0.16351302  0.01653317 -0.01559977  0.00545807 -0.05768546 -0.12261285

@@ -5,7 +5,7 @@ from rdkit.Chem import AllChem
 import keras
 from keras import layers
 
-## 원자 특성: 원자 종류(C, N, O, ...)는 one-hot encoding, 수소 원자 수, 형식 전하, 방향족 여부 ##
+## 원자 특성: 원자 종류(C, N, O, ...)는 one-hot encoding, 수소 원자 수, 형식 전하, 방향족 여부 (고리구조 있는지 없는지) ##
 def one_hot_encoding(atom, possible_atoms):
     encoding = [0] * len(possible_atoms)
     atom_symbol = atom.GetSymbol()
@@ -32,7 +32,7 @@ def get_atom_features(mol, possible_atoms=None):
     
     return np.array(atom_features, dtype=np.float32)
 
-## 분자 내 결함 (엣지) 정보: 결합 종류(단일결합, 이중결합, 삼중결합, 방향족 결합), 공액 여부 ##
+## 분자 내 결함 (엣지) 정보: 결합 종류(단일결합, 이중결합, 삼중결합, 방향족 결합), 공액 (단일결합과 이중결합 번갈아 연결된 구조) 여부 ##
 def get_bond_features(mol):
     bond_features = []
     pair_indices = []
@@ -119,6 +119,7 @@ class MoleculeEmbeddingModel:
         return embeddings
 
 
+### 함수 제대로 작동하는지 확인하는 테스트 케이스 ###
 if __name__ == "__main__":
     smiles_list = [
         "CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", 
