@@ -10,7 +10,6 @@ from data.safe_gpt.tokenizer import *
 from data.safe_gpt.model import *
 
 ### Drug name (각각의 약물에 해당되는 SMILES 정보 이용) ###
-
 ## 화학정보 임베딩 방식 통합 클래스 ##
 class ChemicalEmbeddings:
     def __init__(self):
