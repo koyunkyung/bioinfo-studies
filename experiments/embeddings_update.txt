@@ -1,5 +1,5 @@
 Embedding functions test settings:
-    combined_cell_line = ["Camptothecin:TOP1", "Vinblastine:Microtubule destabiliser", "Cisplatin:DNA crosslinker"]
+    combined_cell_line = ["HH:cutaneous T cell lymphoma", "ZR-75-30:breast_cancer", "AsPC-1:pancreatic_cancer"]
     smiles_list = ["CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O", "CN(C)CC=CC(=O)NC1=C(C=C2C(=C1)C(=NC=N2)NC3=CC(=C(C=C3)F)Cl)OC4CCOC4", "CNC(=O)C1=CC=CC=C1SC2=CC3=C(C=C2)C(=NN3)C=CC4=CC=CC=N4"]
 
 ### Cell Embedding ###
@@ -14,24 +14,12 @@ tensor([[ 0.1227,  0.2728, -1.3876,  ...,  0.2009,  0.2437,  0.3420],
 ### Drug Embedding ###
 ## Chemical Language Embeddings
 
-Encoding failed for SMILES: CCC1(C2=C(COC1=O)C(=O)N3CC4=CC5=CC=CC=C5N=C4C3=C2)O with error: Slicing algorithms did not return any bonds that can be cut !
-SAFE-GPT Embeddings Shape: torch.Size([2, 73, 768])
-SAFE-GPT Embeddings Tensor: 
-tensor([[[ 0.1106,  0.0289, -0.0330,  ...,  0.0725, -0.0498,  0.0093],
-         [ 0.3540, -0.0665,  0.1230,  ...,  0.0484,  0.1037,  0.0836],
-         [ 0.2013, -0.0615,  0.0816,  ...,  0.0156, -0.0449, -0.0058],
-         ...,
-         [-0.0600, -0.0104,  0.1535,  ...,  0.0089, -0.0567,  0.0442],
-         [-0.0601,  0.0045,  0.2604,  ..., -0.0238, -0.0411,  0.0246],
-         [-0.0773, -0.0006,  0.2167,  ..., -0.0260, -0.0558,  0.0432]],
+SAFE-GPT Embeddings Shape: torch.Size([3, 1880])
+SAFE-GPT Embeddings Tensor:
+tensor([[ -5.8815,  -7.8120,  -5.7289,  ..., -18.3566, -18.3192, -18.1885],
+        [ -5.8815,  -7.8120,  -5.7289,  ..., -18.3566, -18.3192, -18.1885],
+        [ -5.8815,  -7.8120,  -5.7289,  ..., -18.3566, -18.3192, -18.1885]])
 
-        [[ 0.1106,  0.0289, -0.0330,  ...,  0.0725, -0.0498,  0.0093],
-         [ 0.3540, -0.0665,  0.1230,  ...,  0.0484,  0.1037,  0.0836],
-         [ 0.1608, -0.0695,  0.1157,  ..., -0.0239, -0.0494, -0.0290],
-         ...,
-         [-0.0790, -0.0016,  0.1842,  ...,  0.0052, -0.0105,  0.0760],
-         [-0.0826,  0.0016,  0.1781,  ...,  0.0017, -0.0100,  0.0751],
-         [-0.1018,  0.0016,  0.1736,  ..., -0.0149, -0.0289,  0.0754]]])
 
 Selfies-GPT Embeddings Shape: torch.Size([3])
 Selfies-GPT Embeddings Tensor: 

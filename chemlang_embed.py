@@ -26,55 +26,32 @@ class ChemicalEmbeddings:
     def get_chemberta_embeddings(self, smiles_list):
         return self.chemberta_embedding.embed(smiles_list)
     
-# safe 언어 모델을 활용한 임베딩
+# safe 언어 모델을 활용한 약물 임베딩
 class SafeEmbeddingGPT:
-   def __init__(self):
-       try:
+    def __init__(self):
+        try:
            self.model = SAFEDoubleHeadsModel.from_pretrained("datamol-io/safe-gpt")
-           self.tokenizer = SAFESplitter()
-           self.vocab_size = self.model.config.vocab_size
-       except Exception as e:
+           self.tokenizer = SAFETokenizer.from_pretrained("datamol-io/safe-gpt")
+        except Exception as e:
            print(f"Error initializing SafeEmbeddingGPT: {e}")
            raise
 
-   def embed(self, smiles_list):
-       # 유효성 검사 후에 safe로 변환 (safe 라이브러리 사용)
-       safe_list = []
-       for smiles in smiles_list:
-           try:
-               mol = Chem.MolFromSmiles(smiles)
-               if mol is None:
-                   print(f"Invalid SMILES: {smiles}")
-                   continue     
-               safe_encoded = safe.encode(smiles)
-               if safe_encoded:
-                   tokens = self.tokenizer.tokenize(safe_encoded)
-                   safe_list.append(tokens)
-           except Exception as e:
-               print(f"Encoding failed for SMILES: {smiles} with error: {e}")
-               continue
-               
-       if not safe_list:
-           raise ValueError("No valid SAFE encodings generated from the provided SMILES")
+    def prepare_inputs(self, smiles_list):
+        encoded_inputs = [self.tokenizer.encode(smiles) for smiles in smiles_list]
+        max_len = max(len(ids) for ids in encoded_inputs)
+        padded_inputs = []
+        for ids in encoded_inputs:
+            padding_length = max_len - len(ids)
+            padded_sequence = ids + [self.tokenizer.pad_token_id] * padding_length
+            padded_inputs.append(padded_sequence)
+        return torch.tensor(padded_inputs, dtype=torch.long)
 
-       # 토큰을 모델 입력으로 변환 (해시 함수 이용해 모델의 어휘 크기에 맞는 정수 ID로 매핑)
-       input_tensors = []
-       for tokens in safe_list:
-           token_ids = []
-           for token in tokens:
-               token_id = hash(token) % (self.vocab_size - 1)
-               token_ids.append(token_id)
-           input_tensors.append(torch.tensor(token_ids))
-
-       # 가장 긴 sequence 기준으로 나머지에 padding 토큰 추가해서 길이 맞추기
-       max_len = max(len(t) for t in input_tensors)
-       padded_tensors = [torch.cat([t, torch.full((max_len - len(t),), self.vocab_size-1)]) for t in input_tensors]
-       input_ids = torch.stack(padded_tensors)
-
-        # 임베딩 추출
-       with torch.no_grad():
-           outputs = self.model(input_ids, output_hidden_states=True)
-       return outputs.hidden_states[-1]
+    def embed(self, smiles_list):
+        input_tensor = self.prepare_inputs(smiles_list)
+        with torch.no_grad():
+            outputs = self.model(input_tensor)
+            embeddings = outputs[0]
+        return embeddings[:, 0, :]  # cls 토큰 추출: beginning, "summary" position of the sentence
 
 
 # selfies 언어 모델을 활용한 임베딩
@@ -155,12 +132,12 @@ if __name__ == "__main__":
     print(f"SAFE-GPT Embeddings Shape: {safe_embeddings.shape}")
     print(f"SAFE-GPT Embeddings Tensor:\n{safe_embeddings}\n")
 
-    # SELFIES 임베딩 테스트
-    selfies_embeddings = embedder.get_selfies_embeddings(smiles_list)
-    print(f"Selfies-GPT Embeddings Shape: {selfies_embeddings.shape}")
-    print(f"Selfies-GPT Embeddings Tensor:\n{selfies_embeddings}\n")
+    # # SELFIES 임베딩 테스트
+    # selfies_embeddings = embedder.get_selfies_embeddings(smiles_list)
+    # print(f"Selfies-GPT Embeddings Shape: {selfies_embeddings.shape}")
+    # print(f"Selfies-GPT Embeddings Tensor:\n{selfies_embeddings}\n")
 
-    # ChemBERTa 임베딩 테스트
-    chemberta_embeddings = embedder.get_chemberta_embeddings(smiles_list)
-    print(f"ChemBERTa Embeddings Shape: {chemberta_embeddings.shape}")
-    print(f"ChemBERTa Embeddings Tensor:\n{chemberta_embeddings}")
+    # # ChemBERTa 임베딩 테스트
+    # chemberta_embeddings = embedder.get_chemberta_embeddings(smiles_list)
+    # print(f"ChemBERTa Embeddings Shape: {chemberta_embeddings.shape}")
+    # print(f"ChemBERTa Embeddings Tensor:\n{chemberta_embeddings}")
