@@ -38,21 +38,28 @@ class SafeEmbeddingGPT:
 
     def prepare_inputs(self, smiles_list):
         encoded_inputs = [self.tokenizer.encode(smiles) for smiles in smiles_list]
+
         max_len = max(len(ids) for ids in encoded_inputs)
         padded_inputs = []
+        attention_masks = []
         for ids in encoded_inputs:
             padding_length = max_len - len(ids)
             padded_sequence = ids + [self.tokenizer.pad_token_id] * padding_length
+            attention_mask = [1] * len(ids) + [0] * padding_length
             padded_inputs.append(padded_sequence)
-        return torch.tensor(padded_inputs, dtype=torch.long)
+            attention_masks.append(attention_mask)
+        return {
+            'input_ids': torch.tensor(padded_inputs, dtype=torch.long),
+            'attention_mask': torch.tensor(attention_masks, dtype=torch.long),
+        }
 
     def embed(self, smiles_list):
-        input_tensor = self.prepare_inputs(smiles_list)
+        inputs = self.prepare_inputs(smiles_list)
         with torch.no_grad():
-            outputs = self.model(input_tensor)
-            embeddings = outputs[0]
-        return embeddings[:, 0, :]  # cls 토큰 추출: beginning, "summary" position of the sentence
-
+            outputs = self.model(**inputs)
+            last_hidden = outputs[0]
+            embeddings = last_hidden[:,0,:]    # cls 토큰 추출: beginning, "summary" position of the sentence
+        return embeddings
 
 # selfies 언어 모델을 활용한 임베딩
 class SelfiesEmbeddingGPT:
