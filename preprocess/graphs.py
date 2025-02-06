@@ -28,6 +28,10 @@ def graph_from_molecule(molecule):
             bond = molecule.GetBondBetweenAtoms(atom.GetIdx(), neighbor.GetIdx())
             pair_indices.append([atom.GetIdx(), neighbor.GetIdx()])
             bond_features.append(bond_featurizer.encode(bond))
+        
+    atom_features = np.array(atom_features)
+    bond_features = np.array(bond_features)
+    pair_indices = np.array(pair_indices)
 
     return (torch.tensor(atom_features, dtype=torch.float),
             torch.tensor(bond_features, dtype=torch.float),
