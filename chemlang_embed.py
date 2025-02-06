@@ -37,8 +37,8 @@ class SafeEmbeddingGPT:
            raise
 
     def prepare_inputs(self, smiles_list):
-        encoded_inputs = [self.tokenizer.encode(smiles) for smiles in smiles_list]
-
+        encoded_inputs = [self.tokenizer.encode(safes) for safes in smiles_list]
+        
         max_len = max(len(ids) for ids in encoded_inputs)
         padded_inputs = []
         attention_masks = []
