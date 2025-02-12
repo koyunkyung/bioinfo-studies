@@ -71,3 +71,38 @@ bond_featurizer = BondFeaturizer(
         "conjugated": {True, False},
     }
 )
+
+
+
+## 테스트 케이스 ##
+if __name__ == "__main__":
+    from rdkit import Chem
+    mol = Chem.MolFromSmiles("CO")
+
+    print("=== Atom Featurizer Test ===")
+    for atom in mol.GetAtoms():
+        features = atom_featurizer.encode(atom)
+        print(f"\nAtom {atom.GetSymbol()} features:")
+        print(f"Feature dimension: {len(features)}")
+        print(f"Number of active features: {sum(features)}")
+
+        active_features = []
+        for name, mapping in atom_featurizer.features_mapping.items():
+            feature_value = getattr(atom_featurizer, name)(atom)
+            if feature_value in mapping:
+                active_features.append(f"{name}: {feature_value}")
+        print("Active features:", active_features)
+
+    print("\n=== Bond Featurizer Test ===")
+    for bond in mol.GetBonds():
+        features = bond_featurizer.encode(bond)
+        print(f"\nBond between {bond.GetBeginAtom().GetSymbol()} and {bond.GetEndAtom().GetSymbol()} features:")
+        print(f"Feature dimension: {len(features)}")
+        print(f"Number of active features: {sum(features)}")
+
+        active_features = []
+        for name, mapping in bond_featurizer.features_mapping.items():
+            feature_value = getattr(bond_featurizer, name)(bond)
+            if feature_value in mapping:
+                active_features.append(f"{name}: {feature_value}")
+        print("Active features:", active_features)

@@ -2,6 +2,7 @@ from features import *
 import torch
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
+import pandas as pd
 
 class MPNNDataset(Dataset):
     def __init__(self, X, y):

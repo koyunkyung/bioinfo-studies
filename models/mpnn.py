@@ -52,24 +52,3 @@ def model_set(x_train, learning_rate=5e-4):
     optimizer = Adam(model.parameters(), lr = learning_rate)
     criterion = nn.BCELoss
     return model, optimizer, criterion
-
-### 모델 학습시키기 ###
-def train_step(model, optimizer, criterion, batch):
-    model.train()
-    optimizer.zero_grad()
-    (atom_features, bond_features, pair_indices, molecule_indicator), y = batch
-
-    y_pred = model([atom_features, bond_features, pair_indices, molecule_indicator])
-    loss = criterion(y_pred, y)
-    loss.backward()
-    optimizer.step()
-
-    return loss.item()
-
-def validate_step(model, criterion, batch):
-    model.eval()
-    with torch.no_grad():
-        (atom_features, bond_features, pair_indices, molecule_indicator), y = batch
-        y_pred = model([atom_features, bond_features, pair_indices, molecule_indicator])
-        loss = criterion(y_pred, y)
-    return loss.item(), y_pred
