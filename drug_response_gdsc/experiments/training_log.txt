@@ -1,0 +1,71 @@
+Experiment: DrugResponse Prediction with Various Embedding Methods
+Date: 2025-01-09
+
+Configuration:
+    embed_dim: 128
+    hidden_dim: 64
+    learning_rate: 0.001
+    batch_size: 32
+    epochs: 100
+
+**Training Progress:**
+
+=== Training with one_hot drug embeddings ===
+    Epoch 1/100, Loss: 0.8289230536473425
+    Epoch 2/100, Loss: 0.44143799927673844
+    Epoch 3/100, Loss: 0.2663529970143971
+    Epoch 4/100, Loss: 0.18910711278256617
+    Epoch 5/100, Loss: 0.161855463232649
+    Epoch 6/100, Loss: 0.14181775972247124
+    Epoch 7/100, Loss: 0.13448692554313885
+    Epoch 8/100, Loss: 0.11636165205977465
+    Epoch 9/100, Loss: 0.1095784418284893
+    Epoch 10/100, Loss: 0.08220385015010834
+    ...
+    Epoch 55/100, Loss: 0.022628090197318478
+    Epoch 56/100, Loss: 0.022596191859951143
+    Epoch 57/100, Loss: 0.02156175307831482
+    Epoch 58/100, Loss: 0.04047919496109611
+    Epoch 59/100, Loss: 0.04604055021742457
+    Epoch 60/100, Loss: 0.03655872540548444
+    Epoch 61/100, Loss: 0.03342594118102601
+    Early stopping triggered after 61 epochs.
+
+=== Training with scbert drug embeddings ===
+    Epoch 1/100, Loss: 1.4262562237287824
+    Epoch 2/100, Loss: 0.9569779916813499
+    Epoch 3/100, Loss: 0.727512547060063
+    Epoch 4/100, Loss: 0.6450364424994117
+    Epoch 5/100, Loss: 0.5436073596540251
+    Epoch 6/100, Loss: 0.5082980213980925
+    Epoch 7/100, Loss: 0.455947660301861
+    Epoch 8/100, Loss: 0.44814873290689367
+    Epoch 9/100, Loss: 0.44015156516903325
+    Epoch 10/100, Loss: 0.4027834958151767
+    Epoch 11/100, Loss: 0.3775160120506036
+    Epoch 12/100, Loss: 0.3853419427024691
+    Epoch 13/100, Loss: 0.32845924324110937
+    Epoch 14/100, Loss: 0.3317861423680657
+    Epoch 15/100, Loss: 0.3562259999544997
+    ...
+
+
+
+
+
+Evaulation:
+
+=== Training with one_hot drug embeddings ===
+    Mean Squared Error (MSE): 2.059009552001953
+    R² Score: -1.0590096861031149
+
+    Mean Squared Error (MSE): 1.1983319520950317
+    R² Score: -0.19833201491201669
+
+    Mean Squared Error (MSE): 2.158752918243408
+    R² Score: -1.158753040037002    
+
+=== Training with scbert drug embeddings ===
+
+
+Best model saved to: experiments/best_model.pth
