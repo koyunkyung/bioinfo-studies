@@ -1,0 +1,57 @@
+# Training Results
+(num_epochs=100, batch_size=32, lr=1e-4, patience=10)
+
+### cell line embedding: bioBERT, drug embedding: morganFP ###
+
+    Epoch 1, Loss: 0.9459540404771504
+    Epoch 2, Loss: 0.7662975858700903
+    Epoch 3, Loss: 0.5128142080808941
+    Epoch 4, Loss: 0.3735698536038399
+    Epoch 5, Loss: 0.3109512544776264
+    Epoch 6, Loss: 0.25700972386096654
+    Epoch 7, Loss: 0.24274232140497157
+    Epoch 8, Loss: 0.2180249773358044
+    Epoch 9, Loss: 0.21269753359650312
+    ...
+    Epoch 92, Loss: 0.08305095190084294
+    Epoch 93, Loss: 0.07182272222187173
+    Epoch 94, Loss: 0.07175980905365002
+    Epoch 95, Loss: 0.0732729791810638
+    Epoch 96, Loss: 0.07750255124349344
+    Epoch 97, Loss: 0.07212889081749477
+    Epoch 98, Loss: 0.06646040032960866
+    Epoch 99, Loss: 0.068326372506195
+    Epoch 100, Loss: 0.06789422770471949
+
+
+
+### cell line embedding: bioBERT, drug embedding: ECFP ###
+
+    Epoch 1, Loss: 0.962758249358127
+    Epoch 2, Loss: 0.8225368865226445
+    Epoch 3, Loss: 0.5915853898776205
+    Epoch 4, Loss: 0.4078317504180105
+    Epoch 5, Loss: 0.30433866577713115
+    Epoch 6, Loss: 0.27187010214516993
+    Epoch 7, Loss: 0.23496128520683238
+    Epoch 8, Loss: 0.22977360141904732
+    Epoch 9, Loss: 0.2089535719469974
+    ...
+    Epoch 92, Loss: 0.08117529347931084
+    Epoch 93, Loss: 0.07648492447639767
+    Epoch 94, Loss: 0.07503570116272099
+    Epoch 95, Loss: 0.07704144211387948
+    Epoch 96, Loss: 0.07643403558942832
+    Epoch 97, Loss: 0.07454689415661912
+    Epoch 98, Loss: 0.07397390299133565
+    Epoch 99, Loss: 0.0977239432303529
+    Epoch 100, Loss: 0.08105322096104685
+
+
+### cell line embedding: bioBERT, drug embedding: GNN embeddings ###
+
+
+### cell line embedding: bioBERT, drug embedding: SELFIES ###
+
+
+### cell line embedding: bioBERT, drug embedding: SAFE ###
